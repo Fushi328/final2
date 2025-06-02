@@ -43,7 +43,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
@@ -60,7 +60,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card bg-info text-white">
                 <div class="card-body">
@@ -77,7 +77,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card bg-warning text-white">
                 <div class="card-body">
@@ -126,7 +126,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -154,7 +154,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -173,7 +173,7 @@
                         <div class="progress mb-3" style="height: 8px;">
                             <div class="progress-bar bg-warning" role="progressbar" style="width: 25%"></div>
                         </div>
-                        
+
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted">Anesthesia</span>
                             <span class="badge bg-success">Good</span>
@@ -181,7 +181,7 @@
                         <div class="progress mb-3" style="height: 8px;">
                             <div class="progress-bar bg-success" role="progressbar" style="width: 80%"></div>
                         </div>
-                        
+
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted">X-ray Films</span>
                             <span class="badge bg-danger">Critical</span>
@@ -216,7 +216,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-4">
             <div class="card">
                 <div class="card-header">
@@ -247,7 +247,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-header">
@@ -318,7 +318,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-4">
             <div class="card">
                 <div class="card-header">
@@ -332,19 +332,19 @@
                         <strong>{{ stats.low_stock_items }}</strong> inventory items are running low
                         <a href="{{ url_for('inventory_index') }}" class="alert-link">View Details</a>
                     </div>
-                    
+
                     <div class="alert alert-info" role="alert">
                         <strong>{{ stats.pending_bills }}</strong> bills are pending payment
                         <a href="{{ url_for('billing_index', status='Pending') }}" class="alert-link">Review Bills</a>
                     </div>
-                    
+
                     <div class="alert alert-success" role="alert">
                         <strong>{{ stats.todays_appointments }}</strong> appointments scheduled for today
                         <a href="{{ url_for('appointments_index') }}" class="alert-link">View Schedule</a>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Performance Metrics -->
             <div class="card mt-3">
                 <div class="card-header">
@@ -429,7 +429,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-header">
@@ -500,7 +500,7 @@
                             <input type="text" class="form-control datepicker" id="endDate" placeholder="End date" required>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Quick Select</label>
                         <div class="btn-group w-100" role="group">
@@ -724,9 +724,9 @@ function setDateRange(period) {
     const now = new Date();
     const startDate = document.getElementById('startDate');
     const endDate = document.getElementById('endDate');
-    
+
     endDate.value = now.toISOString().split('T')[0];
-    
+
     switch(period) {
         case 'today':
             startDate.value = now.toISOString().split('T')[0];
@@ -750,24 +750,24 @@ function setDateRange(period) {
 function applyDateRange() {
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
-    
+
     if (!startDate || !endDate) {
         alert('Please select both start and end dates.');
         return;
     }
-    
+
     if (new Date(startDate) > new Date(endDate)) {
         alert('Start date cannot be after end date.');
         return;
     }
-    
+
     // In a real application, this would reload the dashboard with filtered data
     alert(`Filtering data from ${startDate} to ${endDate}`);
-    
+
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('dateRangeModal'));
     modal.hide();
-    
+
     // Refresh charts with new data
     location.reload();
 }
@@ -797,7 +797,7 @@ function updateAppointmentTrends() {
         );
         appointmentTrendsChart.data.datasets[0].data = newData;
         appointmentTrendsChart.update('none');
-        
+
         // Update stats
         const todaysBookings = newData.reduce((a, b) => a + b, 0);
         document.getElementById('todaysBookings').textContent = todaysBookings;
@@ -808,18 +808,18 @@ function updatePatientVisits() {
     if (patientVisitsChart) {
         const currentHour = new Date().getHours();
         const visitData = patientVisitsChart.data.datasets[0].data;
-        
+
         // Simulate a new visit
         if (Math.random() > 0.7) {
             const currentVisits = parseInt(document.getElementById('visitCounter').textContent);
             const newVisits = currentVisits + 1;
             document.getElementById('visitCounter').textContent = newVisits;
-            
+
             // Update progress
             const percentage = Math.min(100, (newVisits / 15) * 100);
             document.getElementById('visitProgress').style.width = percentage + '%';
             document.getElementById('visitPercentage').textContent = Math.round(percentage) + '%';
-            
+
             // Update chart
             const hourIndex = Math.min(5, Math.floor((currentHour - 8) / 2));
             if (hourIndex >= 0 && hourIndex < visitData.length) {
@@ -837,7 +837,7 @@ function updateInventoryStatus() {
         { name: 'Anesthesia', current: 80, max: 100, element: null },
         { name: 'X-ray Films', current: 10, max: 100, element: null }
     ];
-    
+
     // Randomly decrease inventory levels
     inventoryItems.forEach((item, index) => {
         if (Math.random() > 0.8) {
@@ -866,7 +866,742 @@ function addLiveIndicators() {
 document.addEventListener('DOMContentLoaded', function() {
     setDateRange('month');
     addLiveIndicators();
+
+    // Start real-time updates after 5 seconds
+    setTimeout(() => {
+        updateRealTimeData();
+    }, 5000);
+});
+</script>
+
+        // Real-time updates
+        function updateRealTimeStats() {
+            fetch('/api/realtime-stats')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data); // Debug log
+
+                    // Update appointment trends
+                    const trendsContainer = document.getElementById('appointment-trends');
+                    if (data.appointment_trends && trendsContainer) {
+                        let trendsHtml = '<h6 class="mb-3">Last 7 Days Appointments</h6>';
+                        data.appointment_trends.forEach(trend => {
+                            trendsHtml += `<div class="d-flex justify-content-between mb-2">
+                                <small>${trend.day} (${trend.date})</small>
+                                <span class="badge bg-primary">${trend.count}</span>
+                            </div>`;
+                        });
+                        trendsContainer.innerHTML = trendsHtml;
+                    }
+
+                    // Update today's visits
+                    const visitsElement = document.getElementById('today-visits');
+                    if (visitsElement && data.today_visits !== undefined) {
+visitsElement.textContent = data.today_visits;
+                    }
+
+                    // Update inventory usage
+                    const inventoryContainer = document.getElementById('inventory-usage');
+                    if (data.inventory_usage && inventoryContainer) {
+                        let inventoryHtml = '<h6 class="mb-3">Top Inventory Items</h6>';
+                        data.inventory_usage.slice(0, 5).forEach(item => {
+                            const alertClass = item.is_low_stock ? 'danger' : (item.usage_percentage > 50 ? 'warning' : 'success');
+                            inventoryHtml += `<div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <small class="d-block">${item.name}</small>
+                                    <small class="text-muted">${item.category}</small>
+                                </div>
+                                <span class="badge bg-${alertClass}" title="Current: ${item.current_stock}, Min: ${item.minimum_stock}">
+                                    ${item.current_stock}
+                                </span>
+                            </div>`;
+                        });
+                        inventoryContainer.innerHTML = inventoryHtml;
+                    }
+
+                    // Update dashboard stats if available
+                    if (data.stats) {
+                        const todayAppointments = document.getElementById('todays-appointments');
+                        if (todayAppointments && data.stats.todays_appointments !== undefined) {
+                            todayAppointments.textContent = data.stats.todays_appointments;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating real-time stats:', error);
+                    // Show error in containers
+                    const trendsContainer = document.getElementById('appointment-trends');
+                    const inventoryContainer = document.getElementById('inventory-usage');
+
+                    if (trendsContainer) {
+                        trendsContainer.innerHTML = '<div class="text-muted">Unable to load appointment trends</div>';
+                    }
+                    if (inventoryContainer) {
+                        inventoryContainer.innerHTML = '<div class="text-muted">Unable to load inventory data</div>';
+                    }
+                });
+        }
+
+        // Update every 30 seconds
+        setInterval(updateRealTimeStats, 30000);
+
+        // Initial load after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRealTimeStats();
+        });
+    </script>
+
+        // Real-time updates
+        function updateRealTimeStats() {
+            fetch('/api/realtime-stats')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data); // Debug log
+
+                    // Update appointment trends
+                    const trendsContainer = document.getElementById('appointment-trends');
+                    if (data.appointment_trends && trendsContainer) {
+                        let trendsHtml = '<h6 class="mb-3">Last 7 Days Appointments</h6>';
+                        data.appointment_trends.forEach(trend => {
+                            trendsHtml += `<div class="d-flex justify-content-between mb-2">
+                                <small>${trend.day} (${trend.date})</small>
+                                <span class="badge bg-primary">${trend.count}</span>
+                            </div>`;
+                        });
+                        trendsContainer.innerHTML = trendsHtml;
+                    }
+
+                    // Update today's visits
+                    const visitsElement = document.getElementById('today-visits');
+                    if (visitsElement && data.today_visits !== undefined) {
+                        visitsElement.textContent = data.today_visits;
+                    }
+
+                    // Update inventory usage
+                    const inventoryContainer = document.getElementById('inventory-usage');
+                    if (data.inventory_usage && inventoryContainer) {
+                        let inventoryHtml = '<h6 class="mb-3">Top Inventory Items</h6>';
+                        data.inventory_usage.slice(0, 5).forEach(item => {
+                            const alertClass = item.is_low_stock ? 'danger' : (item.usage_percentage > 50 ? 'warning' : 'success');
+                            inventoryHtml += `<div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <small class="d-block">${item.name}</small>
+                                    <small class="text-muted">${item.category}</small>
+                                </div>
+                                <span class="badge bg-${alertClass}" title="Current: ${item.current_stock}, Min: ${item.minimum_stock}">
+                                    ${item.current_stock}
+                                </span>
+                            </div>`;
+                        });
+                        inventoryContainer.innerHTML = inventoryHtml;
+                    }
+
+                    // Update dashboard stats if available
+                    if (data.stats) {
+                        const todayAppointments = document.getElementById('todays-appointments');
+                        if (todayAppointments && data.stats.todays_appointments !== undefined) {
+                            todayAppointments.textContent = data.stats.todays_appointments;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating real-time stats:', error);
+                    // Show error in containers
+                    const trendsContainer = document.getElementById('appointment-trends');
+                    const inventoryContainer = document.getElementById('inventory-usage');
+
+                    if (trendsContainer) {
+                        trendsContainer.innerHTML = '<div class="text-muted">Unable to load appointment trends</div>';
+                    }
+                    if (inventoryContainer) {
+                        inventoryContainer.innerHTML = '<div class="text-muted">Unable to load inventory data</div>';
+                    }
+                });
+        }
+
+        // Update every 30 seconds
+        setInterval(updateRealTimeStats, 30000);
+
+        // Initial load after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRealTimeStats();
+        });
+    </script>
+
+        // Real-time updates
+        function updateRealTimeStats() {
+            fetch('/api/realtime-stats')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data); // Debug log
+
+                    // Update appointment trends
+                    const trendsContainer = document.getElementById('appointment-trends');
+                    if (data.appointment_trends && trendsContainer) {
+                        let trendsHtml = '<h6 class="mb-3">Last 7 Days Appointments</h6>';
+                        data.appointment_trends.forEach(trend => {
+                            trendsHtml += `<div class="d-flex justify-content-between mb-2">
+                                <small>${trend.day} (${trend.date})</small>
+                                <span class="badge bg-primary">${trend.count}</span>
+                            </div>`;
+                        });
+                        trendsContainer.innerHTML = trendsHtml;
+                    }
+
+                    // Update today's visits
+                    const visitsElement = document.getElementById('today-visits');
+                    if (visitsElement && data.today_visits !== undefined) {
+                        visitsElement.textContent = data.today_visits;
+                    }
+
+                    // Update inventory usage
+                    const inventoryContainer = document.getElementById('inventory-usage');
+                    if (data.inventory_usage && inventoryContainer) {
+                        let inventoryHtml = '<h6 class="mb-3">Top Inventory Items</h6>';
+                        data.inventory_usage.slice(0, 5).forEach(item => {
+                            const alertClass = item.is_low_stock ? 'danger' : (item.usage_percentage > 50 ? 'warning' : 'success');
+                            inventoryHtml += `<div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <small class="d-block">${item.name}</small>
+                                    <small class="text-muted">${item.category}</small>
+                                </div>
+                                <span class="badge bg-${alertClass}" title="Current: ${item.current_stock}, Min: ${item.minimum_stock}">
+                                    ${item.current_stock}
+                                </span>
+                            </div>`;
+                        });
+                        inventoryContainer.innerHTML = inventoryHtml;
+                    }
+
+                    // Update dashboard stats if available
+                    if (data.stats) {
+                        const todayAppointments = document.getElementById('todays-appointments');
+                        if (todayAppointments && data.stats.todays_appointments !== undefined) {
+                            todayAppointments.textContent = data.stats.todays_appointments;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating real-time stats:', error);
+                    // Show error in containers
+                    const trendsContainer = document.getElementById('appointment-trends');
+                    const inventoryContainer = document.getElementById('inventory-usage');
+
+                    if (trendsContainer) {
+                        trendsContainer.innerHTML = '<div class="text-muted">Unable to load appointment trends</div>';
+                    }
+                    if (inventoryContainer) {
+                        inventoryContainer.innerHTML = '<div class="text-muted">Unable to load inventory data</div>';
+                    }
+                });
+        }
+
+        // Update every 30 seconds
+        setInterval(updateRealTimeStats, 30000);
+
+        // Initial load after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRealTimeStats();
+        });
+    </script>
+
+        // Real-time updates
+        function updateRealTimeStats() {
+            fetch('/api/realtime-stats')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data); // Debug log
+
+                    // Update appointment trends
+                    const trendsContainer = document.getElementById('appointment-trends');
+                    if (data.appointment_trends && trendsContainer) {
+                        let trendsHtml = '<h6 class="mb-3">Last 7 Days Appointments</h6>';
+                        data.appointment_trends.forEach(trend => {
+                            trendsHtml += `<div class="d-flex justify-content-between mb-2">
+                                <small>${trend.day} (${trend.date})</small>
+                                <span class="badge bg-primary">${trend.count}</span>
+                            </div>`;
+                        });
+                        trendsContainer.innerHTML = trendsHtml;
+                    }
+
+                    // Update today's visits
+                    const visitsElement = document.getElementById('today-visits');
+                    if (visitsElement && data.today_visits !== undefined) {
+                        visitsElement.textContent = data.today_visits;
+                    }
+
+                    // Update inventory usage
+                    const inventoryContainer = document.getElementById('inventory-usage');
+                    if (data.inventory_usage && inventoryContainer) {
+                        let inventoryHtml = '<h6 class="mb-3">Top Inventory Items</h6>';
+                        data.inventory_usage.slice(0, 5).forEach(item => {
+                            const alertClass = item.is_low_stock ? 'danger' : (item.usage_percentage > 50 ? 'warning' : 'success');
+                            inventoryHtml += `<div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <small class="d-block">${item.name}</small>
+                                    <small class="text-muted">${item.category}</small>
+                                </div>
+                                <span class="badge bg-${alertClass}" title="Current: ${item.current_stock}, Min: ${item.minimum_stock}">
+                                    ${item.current_stock}
+                                </span>
+                            </div>`;
+                        });
+                        inventoryContainer.innerHTML = inventoryHtml;
+                    }
+
+                    // Update dashboard stats if available
+                    if (data.stats) {
+                        const todayAppointments = document.getElementById('todays-appointments');
+                        if (todayAppointments && data.stats.todays_appointments !== undefined) {
+                            todayAppointments.textContent = data.stats.todays_appointments;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating real-time stats:', error);
+                    // Show error in containers
+                    const trendsContainer = document.getElementById('appointment-trends');
+                    const inventoryContainer = document.getElementById('inventory-usage');
+
+                    if (trendsContainer) {
+                        trendsContainer.innerHTML = '<div class="text-muted">Unable to load appointment trends</div>';
+                    }
+                    if (inventoryContainer) {
+                        inventoryContainer.innerHTML = '<div class="text-muted">Unable to load inventory data</div>';
+                    }
+                });
+        }
+
+        // Update every 30 seconds
+        setInterval(updateRealTimeStats, 30000);
+
+        // Initial load after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRealTimeStats();
+        });
+    </script>
     
+<div class="row">
+                 <div class="col-md-3">
+                        <div class="card text-white bg-primary h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title mb-0">Today's Appointments</h6>
+                                        <h3 class="mb-0" id="todays-appointments">{{ stats.todays_appointments }}</h3>
+                                        <small class="opacity-75">Scheduled today</small>
+                                    </div>
+                                    <i class="fas fa-calendar-check fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                 <div class="col-md-3">
+                        <div class="card text-white bg-info h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title mb-0">Today's Visits</h6>
+                                        <h3 class="mb-0" id="today-visits">{{ stats.todays_appointments }}</h3>
+                                        <small class="opacity-75">Completed treatments</small>
+                                    </div>
+                                    <i class="fas fa-user-check fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">Appointment Trends</h6>
+                                <div id="appointment-trends">
+                                    <!-- Appointment trends will be loaded here -->
+                                    <div class="text-muted">Loading appointment trends...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">Inventory Usage</h6>
+                                <div id="inventory-usage">
+                                    <!-- Inventory usage will be loaded here -->
+                                    <div class="text-muted">Loading inventory data...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+});
+
+// Global chart variables for real-time updates
+let appointmentTrendsChart, patientVisitsChart;
+
+function initializeCharts() {
+    // Real-time Appointment Trends Chart
+    const appointmentTrendsCtx = document.getElementById('appointmentTrendsChart').getContext('2d');
+    appointmentTrendsChart = new Chart(appointmentTrendsCtx, {
+        type: 'line',
+        data: {
+            labels: ['8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM'],
+            datasets: [{
+                label: 'Appointments',
+                data: [2, 3, 1, 4, 2, 5, 8, 6, 3, 2],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#007bff',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 10
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+
+    // Patient Visits Chart (Hourly progress)
+    const patientVisitsCtx = document.getElementById('patientVisitsChart').getContext('2d');
+    patientVisitsChart = new Chart(patientVisitsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['8AM', '10AM', '12PM', '2PM', '4PM', '6PM'],
+            datasets: [{
+                label: 'Visits',
+                data: [2, 5, 3, 4, 1, 0],
+                backgroundColor: ['#28a745', '#28a745', '#28a745', '#28a745', '#28a745', '#e9ecef'],
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 6
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Revenue Trend Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'Revenue',
+                data: [65000, 59000, 80000, 81000, 56000, 85000, 90000, 75000, 88000, 95000, 70000, 85000],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₱' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Treatment Distribution Chart
+    const treatmentCtx = document.getElementById('treatmentChart').getContext('2d');
+    new Chart(treatmentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Cleaning', 'Filling', 'Root Canal', 'Extraction', 'Crown', 'Other'],
+            datasets: [{
+                data: [45, 32, 12, 18, 8, 15],
+                backgroundColor: [
+                    '#007bff',
+                    '#28a745',
+                    '#ffc107',
+                    '#dc3545',
+                    '#6f42c1',
+                    '#20c997'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Daily Appointments Chart
+    const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+    new Chart(appointmentsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Appointments',
+                data: [12, 19, 15, 17, 20, 8, 3],
+                backgroundColor: '#007bff',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Demographics Chart
+    const demographicsCtx = document.getElementById('demographicsChart').getContext('2d');
+    new Chart(demographicsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['18-30', '31-45', '46-60', '60+'],
+            datasets: [{
+                data: [25, 35, 30, 10],
+                backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function setDateRange(period) {
+    const now = new Date();
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+
+    endDate.value = now.toISOString().split('T')[0];
+
+    switch(period) {
+        case 'today':
+            startDate.value = now.toISOString().split('T')[0];
+            break;
+        case 'week':
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
+            startDate.value = weekStart.toISOString().split('T')[0];
+            break;
+        case 'month':
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            startDate.value = monthStart.toISOString().split('T')[0];
+            break;
+        case 'year':
+            const yearStart = new Date(now.getFullYear(), 0, 1);
+            startDate.value = yearStart.toISOString().split('T')[0];
+            break;
+    }
+}
+
+function applyDateRange() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates.');
+        return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+        alert('Start date cannot be after end date.');
+        return;
+    }
+
+    // In a real application, this would reload the dashboard with filtered data
+    alert(`Filtering data from ${startDate} to ${endDate}`);
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('dateRangeModal'));
+    modal.hide();
+
+    // Refresh charts with new data
+    location.reload();
+}
+
+function exportReport() {
+    // In a real application, this would generate and download a report
+    alert('Report export feature would generate PDF/Excel files with current data');
+}
+
+function viewInventoryDetails() {
+    window.location.href = '/inventory';
+}
+
+// Real-time update functions
+function updateRealTimeData() {
+    // Simulate real-time data updates
+    updateAppointmentTrends();
+    updatePatientVisits();
+    updateInventoryStatus();
+}
+
+function updateAppointmentTrends() {
+    if (appointmentTrendsChart) {
+        // Simulate new appointment data
+        const newData = appointmentTrendsChart.data.datasets[0].data.map(value => 
+            Math.max(0, value + Math.floor(Math.random() * 3) - 1)
+        );
+        appointmentTrendsChart.data.datasets[0].data = newData;
+        appointmentTrendsChart.update('none');
+
+        // Update stats
+        const todaysBookings = newData.reduce((a, b) => a + b, 0);
+        document.getElementById('todaysBookings').textContent = todaysBookings;
+    }
+}
+
+function updatePatientVisits() {
+    if (patientVisitsChart) {
+        const currentHour = new Date().getHours();
+        const visitData = patientVisitsChart.data.datasets[0].data;
+
+        // Simulate a new visit
+        if (Math.random() > 0.7) {
+            const currentVisits = parseInt(document.getElementById('visitCounter').textContent);
+            const newVisits = currentVisits + 1;
+            document.getElementById('visitCounter').textContent = newVisits;
+
+            // Update progress
+            const percentage = Math.min(100, (newVisits / 15) * 100);
+            document.getElementById('visitProgress').style.width = percentage + '%';
+            document.getElementById('visitPercentage').textContent = Math.round(percentage) + '%';
+
+            // Update chart
+            const hourIndex = Math.min(5, Math.floor((currentHour - 8) / 2));
+            if (hourIndex >= 0 && hourIndex < visitData.length) {
+                visitData[hourIndex] = Math.min(6, visitData[hourIndex] + 1);
+                patientVisitsChart.update('none');
+            }
+        }
+    }
+}
+
+function updateInventoryStatus() {
+    // Simulate inventory usage updates
+    const inventoryItems = [
+        { name: 'Dental Gloves', current: 25, max: 100, element: null },
+        { name: 'Anesthesia', current: 80, max: 100, element: null },
+        { name: 'X-ray Films', current: 10, max: 100, element: null }
+    ];
+
+    // Randomly decrease inventory levels
+    inventoryItems.forEach((item, index) => {
+        if (Math.random() > 0.8) {
+            item.current = Math.max(0, item.current - 1);
+        }
+    });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(updateRealTimeData, 30000);
+
+// Add visual indicators for live updates
+function addLiveIndicators() {
+    const liveElements = document.querySelectorAll('.badge:contains("LIVE")');
+    liveElements.forEach(element => {
+        setInterval(() => {
+            element.style.opacity = '0.5';
+            setTimeout(() => {
+                element.style.opacity = '1';
+            }, 500);
+        }, 2000);
+    });
+}
+
+// Set default date range to current month
+document.addEventListener('DOMContentLoaded', function() {
+    setDateRange('month');
+    addLiveIndicators();
+
     // Start real-time updates after 5 seconds
     setTimeout(() => {
         updateRealTimeData();

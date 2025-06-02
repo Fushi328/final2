@@ -47,6 +47,9 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
 db.init_app(app)
 mail.init_app(app)
 
+# Import routes after app initialization
+import routes
+
 with app.app_context():
     # Import models to ensure tables are created
     import models
@@ -69,6 +72,3 @@ with app.app_context():
         db.session.add(admin_user)
         db.session.commit()
         print("Default admin user created: admin/admin123")
-
-# Import routes after app initialization
-import routes

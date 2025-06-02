@@ -15,7 +15,7 @@ def generate_invoice_pdf(bill, filename):
         doc = SimpleDocTemplate(filename, pagesize=letter)
         styles = getSampleStyleSheet()
         story = []
-        
+
         # Title
         title_style = ParagraphStyle(
             'CustomTitle',
@@ -27,7 +27,7 @@ def generate_invoice_pdf(bill, filename):
         )
         story.append(Paragraph("DENTAL CLINIC INVOICE", title_style))
         story.append(Spacer(1, 20))
-        
+
         # Clinic and patient info
         info_data = [
             ['Bill #:', str(bill.id)],
@@ -37,7 +37,7 @@ def generate_invoice_pdf(bill, filename):
             ['Patient Phone:', bill.patient.phone],
             ['Patient Email:', bill.patient.email or 'N/A']
         ]
-        
+
         info_table = Table(info_data, colWidths=[1.5*inch, 3*inch])
         info_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
@@ -48,7 +48,7 @@ def generate_invoice_pdf(bill, filename):
         ]))
         story.append(info_table)
         story.append(Spacer(1, 30))
-        
+
         # Services table
         services_data = [['Description', 'Quantity', 'Unit Price', 'Total']]
         for item in bill.bill_items:
@@ -58,13 +58,13 @@ def generate_invoice_pdf(bill, filename):
                 f"₱{item.unit_price:,.2f}",
                 f"₱{item.total_price:,.2f}"
             ])
-        
+
         # Add totals
         services_data.append(['', '', 'Subtotal:', f"₱{bill.total_amount:,.2f}"])
         if bill.paid_amount > 0:
             services_data.append(['', '', 'Paid:', f"₱{bill.paid_amount:,.2f}"])
             services_data.append(['', '', 'Balance:', f"₱{bill.get_balance():,.2f}"])
-        
+
         services_table = Table(services_data, colWidths=[3*inch, 1*inch, 1.5*inch, 1.5*inch])
         services_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
@@ -80,16 +80,16 @@ def generate_invoice_pdf(bill, filename):
         ]))
         story.append(services_table)
         story.append(Spacer(1, 30))
-        
+
         # Payment information
         if bill.payment_method:
             payment_info = f"Payment Method: {bill.payment_method}"
             story.append(Paragraph(payment_info, styles['Normal']))
-        
+
         if bill.notes:
             story.append(Spacer(1, 20))
             story.append(Paragraph(f"Notes: {bill.notes}", styles['Normal']))
-        
+
         # Build PDF
         doc.build(story)
         return True
@@ -115,7 +115,7 @@ def send_appointment_reminder(appointment):
     """Send appointment reminder email"""
     if not appointment.patient.email:
         return False
-    
+
     subject = "Appointment Reminder - Dental Clinic"
     body = f"""
 Dear {appointment.patient.get_full_name()},
@@ -135,18 +135,18 @@ If you need to reschedule or cancel, please contact us as soon as possible.
 Best regards,
 Dental Clinic Team
 """
-    
+
     return send_email(appointment.patient.email, subject, body, appointment.patient.get_full_name())
 
 def get_dashboard_stats():
     """Get statistics for dashboard"""
     from models import Patient, Appointment, Bill, InventoryItem, Treatment
     from datetime import date, timedelta
-    
+
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
     month_start = today.replace(day=1)
-    
+
     stats = {
         'total_patients': Patient.query.count(),
         'todays_appointments': Appointment.query.filter_by(appointment_date=today).count(),
@@ -168,15 +168,15 @@ def get_dashboard_stats():
             InventoryItem.current_stock <= (InventoryItem.minimum_stock * 0.1)
         ).count()
     }
-    
+
     # Calculate monthly revenue
     monthly_bills = Bill.query.filter(
         Bill.bill_date >= month_start,
         Bill.status == 'Paid'
     ).all()
-    
+
     stats['total_revenue_month'] = sum(float(bill.paid_amount) for bill in monthly_bills)
-    
+
     # Calculate average appointments per day
     total_appointments = Appointment.query.count()
     if total_appointments > 0:
@@ -184,80 +184,85 @@ def get_dashboard_stats():
         if first_appointment:
             days_since_first = (today - first_appointment.created_at.date()).days + 1
             stats['avg_appointments_per_day'] = round(total_appointments / max(days_since_first, 1), 1)
-    
+
     return statshly_bills)
-    
+
     # Calculate average appointments per day (last 30 days)
     past_30_days = today - timedelta(days=30)
     total_appointments_30_days = Appointment.query.filter(
         Appointment.appointment_date >= past_30_days,
         Appointment.appointment_date <= today
     ).count()
-    
+
     stats['avg_appointments_per_day'] = round(total_appointments_30_days / 30, 1)
-    
+
     return stats
 
 def get_realtime_appointment_trends():
-    """Get hourly appointment trends for today"""
+    """Get appointment trends for the last 7 days"""
+    from datetime import date, timedelta
     from models import Appointment
-    from datetime import date, datetime, timedelta
-    
-    today = date.today()
-    hourly_data = {}
-    
-    # Initialize hourly slots
-    for hour in range(8, 18):  # 8 AM to 6 PM
-        hourly_data[hour] = 0
-    
-    # Get today's appointments
-    appointments = Appointment.query.filter_by(appointment_date=today).all()
-    
-    for appointment in appointments:
-        hour = appointment.appointment_time.hour
-        if hour in hourly_data:
-            hourly_data[hour] += 1
-    
-    return hourly_dataourly_data
+    from app import db
+
+    try:
+        trends = []
+        today = date.today()
+
+        for i in range(7):
+            target_date = today - timedelta(days=i)
+            count = Appointment.query.filter_by(appointment_date=target_date).count()
+            trends.append({
+                'date': target_date.strftime('%Y-%m-%d'),
+                'day': target_date.strftime('%a'),
+                'count': count
+            })
+
+        return list(reversed(trends))
+    except Exception as e:
+        print(f"Error getting appointment trends: {e}")
+        return []
 
 def get_inventory_usage_trends():
-    """Get inventory usage trends"""
+    """Get inventory items with usage statistics"""
     from models import InventoryItem
-    
-    items = InventoryItem.query.all()
-    usage_data = []
-    
-    for item in items:
-        usage_percentage = (item.current_stock / max(item.minimum_stock * 3, 1)) * 100
-        status = 'good'
-        
-        if item.current_stock <= item.minimum_stock * 0.1:
-            status = 'critical'
-        elif item.current_stock <= item.minimum_stock:
-            status = 'low'
-        
-        usage_data.append({
-            'name': item.name,
-            'current_stock': item.current_stock,
-            'minimum_stock': item.minimum_stock,
-            'usage_percentage': min(100, usage_percentage),
-            'status': status
-        })
-    
-    # Sort by status priority (critical first)
-    status_priority = {'critical': 0, 'low': 1, 'good': 2}
-    usage_data.sort(key=lambda x: status_priority.get(x['status'], 3))
-    
-    return usage_data
+    from app import db
+
+    try:
+        # Get all items and calculate usage percentage
+        items = InventoryItem.query.all()
+
+        usage_data = []
+        for item in items:
+            if item.minimum_stock > 0:
+                usage_percentage = round((item.minimum_stock - item.current_stock) / item.minimum_stock * 100, 1)
+                if usage_percentage < 0:
+                    usage_percentage = 0
+            else:
+                usage_percentage = 0
+
+            usage_data.append({
+                'name': item.name,
+                'current_stock': item.current_stock,
+                'minimum_stock': item.minimum_stock,
+                'usage_percentage': usage_percentage,
+                'is_low_stock': item.current_stock <= item.minimum_stock,
+                'category': item.category
+            })
+
+        # Sort by usage percentage (highest first)
+        return sorted(usage_data, key=lambda x: x['usage_percentage'], reverse=True)
+    except Exception as e:
+        print(f"Error getting inventory usage: {e}")
+        return []
 
 def get_upcoming_appointments(days=7):
     """Get upcoming appointments for the next few days"""
     from models import Appointment
     from datetime import date, timedelta
-    
+
     today = date.today()
     end_date = today + timedelta(days=days)
-    
+
     return Appointment.query.filter(
         Appointment.appointment_date >= today,
         Appointment.appointment_date <= end_date,

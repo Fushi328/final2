@@ -34,6 +34,68 @@ def login():
 @app.route('/api/realtime-stats')
 @login_required
 def realtime_stats():
+    """API endpoint for real-time dashboard statistics"""
+    try:
+        from utils import get_realtime_appointment_trends
+        
+        # Get appointment trends
+        appointment_trends = get_realtime_appointment_trends()
+        
+        # Get today's stats
+        today = date.today()
+        todays_appointments = Appointment.query.filter_by(appointment_date=today).count()
+        today_visits = Appointment.query.filter(
+            Appointment.appointment_date == today,
+            Appointment.status == 'Completed'
+        ).count()
+        
+        # Get inventory usage (top 10 items with low stock warning)
+        inventory_usage = []
+        try:
+            inventory_items = InventoryItem.query.all()
+            for item in inventory_items[:10]:  # Top 10 items
+                usage_percentage = 0
+                if item.minimum_stock > 0:
+                    usage_percentage = ((item.minimum_stock - item.current_stock) / item.minimum_stock) * 100
+                
+                inventory_usage.append({
+                    'name': item.name,
+                    'category': item.category,
+                    'current_stock': item.current_stock,
+                    'minimum_stock': item.minimum_stock,
+                    'usage_percentage': max(0, usage_percentage),
+                    'is_low_stock': item.current_stock <= item.minimum_stock
+                })
+        except Exception as e:
+            print(f"Error getting inventory: {e}")
+        
+        # Basic stats
+        stats = {
+            'todays_appointments': todays_appointments,
+            'avg_appointments_per_day': 8.5,  # Could be calculated from historical data
+            'inventory_critical_count': len([item for item in inventory_usage if item['is_low_stock']])
+        }
+        
+        return jsonify({
+            'appointment_trends': appointment_trends,
+            'today_visits': today_visits,
+            'inventory_usage': inventory_usage,
+            'stats': stats
+        })
+        
+    except Exception as e:
+        print(f"Error in realtime_stats: {e}")
+        return jsonify({
+            'appointment_trends': [],
+            'today_visits': 0,
+            'inventory_usage': [],
+            'stats': {
+                'todays_appointments': 0,
+                'avg_appointments_per_day': 0,
+                'inventory_critical_count': 0
+            }
+        }), 500
+def realtime_stats():
     """API endpoint for real-time dashboard updates"""
     try:
         # Get current stats

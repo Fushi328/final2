@@ -27,6 +27,9 @@
                         <i class="fas fa-money-bill me-2"></i>
                         Record Payment
                     </button>
+                    <a href="{{ url_for('gcash_qr_payment', id=bill.id) }}" class="btn btn-info me-2">
+                        <i class="fas fa-qrcode me-2"></i> Pay with GCash QR
+                    </a>
                     {% endif %}
                     <a href="{{ url_for('billing_index') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-2"></i>
@@ -169,6 +172,21 @@
                                     {% endif %}
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12 text-end">
+                            {% if bill.get_balance() > 0 %}
+                                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                                    <i class="fas fa-money-bill-wave me-2"></i> Record Payment
+                                </button>
+                                <a href="{{ url_for('gcash_qr_payment', id=bill.id) }}" class="btn btn-info me-2">
+                                    <i class="fas fa-qrcode me-2"></i> Pay with GCash QR
+                                </a>
+                            {% else %}
+                                <span class="badge bg-success fs-5 p-2"><i class="fas fa-check-circle me-2"></i>PAID IN FULL</span>
+                            {% endif %}
                         </div>
                     </div>
 

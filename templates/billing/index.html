@@ -169,7 +169,11 @@
                             <div class="col-md-3">
                                 <div class="card bg-warning text-white">
                                     <div class="card-body text-center">
-                                        <h5>₱{{ "{:,.2f}".format(bills|map("get_balance")|sum) }}</h5>
+                                        {% set outstanding_total = 0 %}
+                                        {% for bill in bills %}
+                                            {% set outstanding_total = outstanding_total + bill.get_balance() %}
+                                        {% endfor %}
+                                        <h5>₱{{ "{:,.2f}".format(outstanding_total) }}</h5>
                                         <small>Outstanding</small>
                                     </div>
                                 </div>

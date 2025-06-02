@@ -8,7 +8,7 @@ import tempfile
 from app import app, db, login_manager
 from models import Staff, Patient, Appointment, Treatment, Bill, BillItem, InventoryItem, Communication
 from forms import *
-from utils import generate_invoice_pdf, send_appointment_reminder, get_dashboard_stats, get_upcoming_appointments, send_email, get_realtime_appointment_trends, get_inventory_usage_trends
+from utils import generate_invoice_pdf, send_appointment_reminder, get_dashboard_stats, get_upcoming_appointments, send_email, get_appointment_trends, get_inventory_usage_trends, get_patient_visits_hourly
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -31,77 +31,16 @@ def login():
         flash('Invalid username or password', 'danger')
     return render_template('login.html', form=form)
 
-@app.route('/api/realtime-stats')
+@app.route('/api/dashboard-stats')
 @login_required
-def realtime_stats():
-    """API endpoint for real-time dashboard statistics"""
-    try:
-        from utils import get_realtime_appointment_trends
-        
-        # Get appointment trends
-        appointment_trends = get_realtime_appointment_trends()
-        
-        # Get today's stats
-        today = date.today()
-        todays_appointments = Appointment.query.filter_by(appointment_date=today).count()
-        today_visits = Appointment.query.filter(
-            Appointment.appointment_date == today,
-            Appointment.status == 'Completed'
-        ).count()
-        
-        # Get inventory usage (top 10 items with low stock warning)
-        inventory_usage = []
-        try:
-            inventory_items = InventoryItem.query.all()
-            for item in inventory_items[:10]:  # Top 10 items
-                usage_percentage = 0
-                if item.minimum_stock > 0:
-                    usage_percentage = ((item.minimum_stock - item.current_stock) / item.minimum_stock) * 100
-                
-                inventory_usage.append({
-                    'name': item.name,
-                    'category': item.category,
-                    'current_stock': item.current_stock,
-                    'minimum_stock': item.minimum_stock,
-                    'usage_percentage': max(0, usage_percentage),
-                    'is_low_stock': item.current_stock <= item.minimum_stock
-                })
-        except Exception as e:
-            print(f"Error getting inventory: {e}")
-        
-        # Basic stats
-        stats = {
-            'todays_appointments': todays_appointments,
-            'avg_appointments_per_day': 8.5,  # Could be calculated from historical data
-            'inventory_critical_count': len([item for item in inventory_usage if item['is_low_stock']])
-        }
-        
-        return jsonify({
-            'appointment_trends': appointment_trends,
-            'today_visits': today_visits,
-            'inventory_usage': inventory_usage,
-            'stats': stats
-        })
-        
-    except Exception as e:
-        print(f"Error in realtime_stats: {e}")
-        return jsonify({
-            'appointment_trends': [],
-            'today_visits': 0,
-            'inventory_usage': [],
-            'stats': {
-                'todays_appointments': 0,
-                'avg_appointments_per_day': 0,
-                'inventory_critical_count': 0
-            }
-        }), 500
-def realtime_stats():
-    """API endpoint for real-time dashboard updates"""
+def dashboard_stats():
+    """API endpoint for dashboard updates"""
     try:
         # Get current stats
         stats = get_dashboard_stats()
-        appointment_trends = get_realtime_appointment_trends()
+        appointment_trends = get_appointment_trends()
         inventory_trends = get_inventory_usage_trends()
+        patient_visits_hourly = get_patient_visits_hourly()
         
         # Get today's completed visits
         today_visits = Treatment.query.filter_by(
@@ -113,6 +52,7 @@ def realtime_stats():
             'appointment_trends': appointment_trends,
             'today_visits': today_visits,
             'inventory_usage': inventory_trends[:5],  # Top 5 items
+            'patient_visits_hourly': patient_visits_hourly,
             'stats': {
                 'todays_appointments': stats['todays_appointments'],
                 'avg_appointments_per_day': stats.get('avg_appointments_per_day', 0),
@@ -314,7 +254,8 @@ def billing_index():
         bills = bills.filter(Bill.status == status_filter)
     
     bills = bills.order_by(Bill.bill_date.desc()).all()
-    return render_template('billing/index.html', bills=bills, status_filter=status_filter)
+    today = date.today()
+    return render_template('billing/index.html', bills=bills, status_filter=status_filter, today=today)
 
 @app.route('/billing/add', methods=['GET', 'POST'])
 @login_required
@@ -322,6 +263,58 @@ def billing_add():
     form = BillForm()
     form.patient_id.choices = [(p.id, p.get_full_name()) for p in Patient.query.order_by(Patient.last_name).all()]
     
+    if request.is_json:
+        data = request.json
+        patient_id = data.get('patient_id')
+        due_date_str = data.get('due_date')
+        payment_method = data.get('payment_method')
+        notes = data.get('notes')
+        bill_items_data = data.get('bill_items', [])
+
+        try:
+            due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Invalid due date format'}), 400
+
+        if not patient_id:
+            return jsonify({'success': False, 'message': 'Patient ID is required'}), 400
+
+        bill = Bill(
+            patient_id=patient_id,
+            bill_date=date.today(),
+            due_date=due_date,
+            total_amount=0,
+            payment_method=payment_method,
+            notes=notes
+        )
+        db.session.add(bill)
+        db.session.flush()
+
+        total = 0
+        for item_data in bill_items_data:
+            description = item_data.get('description')
+            quantity = item_data.get('quantity')
+            unit_price = item_data.get('unit_price')
+
+            if description and quantity is not None and unit_price is not None and quantity > 0 and unit_price >= 0:
+                total_price = quantity * unit_price
+                bill_item = BillItem(
+                    bill_id=bill.id,
+                    description=description,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    total_price=total_price
+                )
+                db.session.add(bill_item)
+                total += total_price
+            else:
+                db.session.rollback()
+                return jsonify({'success': False, 'message': 'Invalid bill item data'}), 400
+        
+        bill.total_amount = total
+        db.session.commit()
+        return jsonify({'success': True, 'bill_id': bill.id, 'message': 'Bill created successfully!'}), 200
+
     if form.validate_on_submit():
         bill = Bill(
             patient_id=form.patient_id.data,
@@ -381,6 +374,23 @@ def billing_pdf(id):
         else:
             flash('Error generating PDF', 'danger')
             return redirect(url_for('billing_view', id=id))
+
+@app.route('/billing/<int:id>/gcash_qr')
+@login_required
+def gcash_qr_payment(id):
+    bill = Bill.query.get_or_404(id)
+    return render_template('billing/gcash_qr.html', bill=bill)
+
+@app.route('/billing/<int:id>/confirm_payment', methods=['POST'])
+@login_required
+def confirm_payment(id):
+    bill = Bill.query.get_or_404(id)
+    bill.status = 'Paid'
+    bill.paid_amount = bill.total_amount  # Assuming full payment via QR
+    bill.payment_method = 'GCash QR'
+    db.session.commit()
+    flash(f'Bill INV-{bill.id:04d} has been marked as Paid via GCash QR.', 'success')
+    return redirect(url_for('billing_view', id=bill.id))
 
 @app.route('/billing/<int:id>/pay', methods=['POST'])
 @login_required

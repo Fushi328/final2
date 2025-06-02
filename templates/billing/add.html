@@ -43,7 +43,7 @@
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
+                        <div class="mb-3" id="dueDateGroup">
                             {{ form.due_date.label(class="form-label") }}
                             {{ form.due_date(class="form-control" + (" is-invalid" if form.due_date.errors else "")) }}
                             {% if form.due_date.errors %}
@@ -55,7 +55,7 @@
                         
                         <div class="mb-3">
                             {{ form.payment_method.label(class="form-label") }}
-                            {{ form.payment_method(class="form-select") }}
+                            {{ form.payment_method(class="form-select", id="paymentMethodSelect") }}
                             <div class="form-text">Optional: Expected payment method</div>
                         </div>
                         
@@ -102,8 +102,21 @@
                         </button>
                     </div>
                     <div class="card-body">
-                        <div id="billItems">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Item/Service</th>
+                                        <th style="width: 20%;">Quantity</th>
+                                        <th style="width: 20%;">Unit Price</th>
+                                        <th style="width: 5%;">Total</th>
+                                        <th style="width: 5%;"></th> <!-- For delete button -->
+                                    </tr>
+                                </thead>
+                                <tbody id="billItemsTableBody">
                             <!-- Bill items will be added here dynamically -->
+                                </tbody>
+                            </table>
                         </div>
                         
                         <div class="text-center mt-3" id="emptyItemsMessage">
@@ -177,10 +190,10 @@
         <div class="row">
             <div class="col-12">
                 <div class="d-flex justify-content-end gap-2 mt-4">
-                    <a href="{{ url_for('billing_index') }}" class="btn btn-secondary">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">
                         <i class="fas fa-times me-2"></i>
                         Cancel
-                    </a>
+                    </button>
                     <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
                         <i class="fas fa-save me-2"></i>
                         Create Bill
@@ -193,12 +206,235 @@
         <input type="hidden" id="item_count" name="item_count" value="0">
     </form>
 </div>
+
+<!-- GCash QR Code Modal -->
+<div class="modal fade" id="gcashQrModal" tabindex="-1" aria-labelledby="gcashQrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gcashQrModalLabel">Scan to Pay via GCash</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Please scan the QR code below to complete your payment.</p>
+                <img src="/static/images/gcash_qr_placeholder.png" alt="GCash QR Code" class="img-fluid mb-3" style="max-width: 250px;">
+                <p><strong>Amount: <span id="qrPaymentAmount">₱0.00</span></strong></p>
+                <p class="text-muted">Once payment is confirmed, click 'Proceed'.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="proceedGcashPaymentBtn">Proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
 let itemCount = 0;
 
+function addBillItem(description = '', quantity = 1, unitPrice = 0) {
+    const billItemsTableBody = document.getElementById('billItemsTableBody');
+    const emptyItemsMessage = document.getElementById('emptyItemsMessage');
+
+    if (emptyItemsMessage) {
+        emptyItemsMessage.style.display = 'none';
+    }
+
+    const newRow = document.createElement('tr');
+    newRow.id = `bill-item-${itemCount}`;
+    newRow.className = 'bill-item';
+    
+    const total = quantity * unitPrice; // Explicitly calculate item total
+    newRow.innerHTML = `
+        <td style="width: 50%;">
+            <input type="text" class="form-control form-control-sm item-description" 
+                   name="items[${itemCount}][description]" 
+                   placeholder="Service or item description" value="${description}" required>
+        </td>
+        <td style="width: 20%;">
+            <input type="number" class="form-control form-control-sm item-quantity" 
+                   name="items[${itemCount}][quantity]" value="${quantity}" min="1" required>
+        </td>
+        <td style="width: 20%;">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">₱</span>
+                <input type="number" class="form-control form-control-sm item-unit-price" 
+                       name="items[${itemCount}][unit_price]" value="${unitPrice}" min="0" step="0.01" required>
+            </div>
+        </td>
+        <td style="width: 5%;">
+            <span class="item-total">₱${total.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <input type="hidden" class="item-total-value" name="items[${itemCount}][total_price]" value="${total}">
+        </td>
+        <td style="width: 5%;">
+            <button type="button" class="btn btn-sm btn-danger remove-item" onclick="removeBillItem(${itemCount})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    billItemsTableBody.appendChild(newRow);
+
+    // Add event listeners for new inputs
+    const quantityInput = newRow.querySelector(`.item-quantity`);
+    const unitPriceInput = newRow.querySelector(`.item-unit-price`);
+    const descriptionInput = newRow.querySelector(`.item-description`);
+
+    quantityInput.addEventListener('input', updateItemTotal);
+    unitPriceInput.addEventListener('input', updateItemTotal);
+    descriptionInput.addEventListener('input', validateForm);
+
+    updateItemTotal.call(quantityInput); // Recalculate total for new item
+    itemCount++;
+    document.getElementById('item_count').value = itemCount;
+    validateForm();
+}
+
+function removeBillItem(id) {
+    const itemToRemove = document.getElementById(`bill-item-${id}`);
+    if (itemToRemove) {
+        itemToRemove.remove();
+        calculateGrandTotal();
+        validateForm();
+        
+        const billItemsTableBody = document.getElementById('billItemsTableBody');
+        if (billItemsTableBody.children.length === 0) {
+            document.getElementById('emptyItemsMessage').style.display = 'block';
+        }
+    }
+}
+
+function updateItemTotal(event) {
+    const row = this.closest('.bill-item');
+    const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+    const unitPrice = parseFloat(row.querySelector('.item-unit-price').value) || 0;
+    const total = quantity * unitPrice;
+    
+    row.querySelector('.item-total').textContent = `₱${total.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    row.querySelector('.item-total-value').value = total.toFixed(2);
+    
+    calculateGrandTotal();
+    validateForm();
+}
+
+function calculateGrandTotal() {
+    let subtotal = 0;
+    document.querySelectorAll('.item-total-value').forEach(input => {
+        subtotal += parseFloat(input.value) || 0;
+    });
+    
+    document.getElementById('subtotal').textContent = `₱${subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById('total').textContent = `₱${subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+}
+
+function validateForm() {
+    let allItemsValid = true;
+    let hasItems = false;
+
+    document.querySelectorAll('.bill-item').forEach(row => {
+        hasItems = true;
+        const description = row.querySelector('.item-description').value.trim();
+        const quantity = parseFloat(row.querySelector('.item-quantity').value);
+        const unitPrice = parseFloat(row.querySelector('.item-unit-price').value);
+
+        if (description === '' || isNaN(quantity) || quantity <= 0 || isNaN(unitPrice) || unitPrice < 0) {
+            allItemsValid = false;
+        }
+    });
+
+    const submitBtn = document.getElementById('submitBtn');
+    if (hasItems && allItemsValid) {
+        submitBtn.removeAttribute('disabled');
+    } else {
+        submitBtn.setAttribute('disabled', 'disabled');
+    }
+}
+
+function toggleDueDateVisibility() {
+    const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+    const dueDateGroup = document.getElementById('dueDateGroup');
+    if (paymentMethodSelect && dueDateGroup) {
+        if (paymentMethodSelect.value === 'Cash') {
+            dueDateGroup.style.display = 'none';
+        } else {
+            dueDateGroup.style.display = 'block';
+        }
+    }
+}
+
+function clearForm() {
+    // Clear patient selection
+    const patientSelect = document.getElementById('patient_id');
+    if (patientSelect) {
+        patientSelect.selectedIndex = 0;
+    }
+
+    // Reset due date
+    const dueDateInput = document.getElementById('due_date');
+    if (dueDateInput) {
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 30);
+        dueDateInput.value = futureDate.toISOString().split('T')[0];
+    }
+
+    // Reset payment method
+    const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+    if (paymentMethodSelect) {
+        paymentMethodSelect.selectedIndex = 0; // Select the first option (Cash)
+        toggleDueDateVisibility();
+    }
+
+    // Clear notes
+    const notesInput = document.getElementById('notes');
+    if (notesInput) {
+        notesInput.value = '';
+    }
+
+    // Remove all bill items
+    const billItemsTableBody = document.getElementById('billItemsTableBody');
+    while (billItemsTableBody.firstChild) {
+        billItemsTableBody.removeChild(billItemsTableBody.firstChild);
+    }
+    itemCount = 0;
+    document.getElementById('item_count').value = 0;
+    document.getElementById('emptyItemsMessage').style.display = 'block';
+
+    // Recalculate total
+    calculateGrandTotal();
+
+    // Disable submit button
+    validateForm();
+
+    flash('Form has been reset.', 'info');
+}
+
+// Helper to show temporary flash messages
+function flash(message, category) {
+    const flashContainer = document.querySelector('.flash-messages'); // Assuming you have a div with this class to display flashes
+    if (flashContainer) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${category} alert-dismissible fade show`;
+        alertDiv.setAttribute('role', 'alert');
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        flashContainer.appendChild(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            alertDiv.classList.add('fade');
+            alertDiv.addEventListener('transitionend', () => alertDiv.remove());
+        }, 5000);
+    }
+}
+
+function addQuickItem(description, quantity, unitPrice) {
+    addBillItem(description, quantity, unitPrice);
+}
+
+// Initial call to set visibility on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Set default due date (30 days from today)
     const dueDateInput = document.getElementById('due_date');
@@ -210,166 +446,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add initial item
     addBillItem();
-});
 
-function addBillItem() {
-    const billItems = document.getElementById('billItems');
-    const emptyMessage = document.getElementById('emptyItemsMessage');
-    
-    if (emptyMessage) {
-        emptyMessage.style.display = 'none';
+    // Listen for changes on payment method to trigger recalculation if needed
+    const paymentMethodInput = document.getElementById('paymentMethodSelect');
+    if (paymentMethodInput) {
+        paymentMethodInput.addEventListener('change', calculateGrandTotal);
+        paymentMethodInput.addEventListener('change', toggleDueDateVisibility);
     }
-    
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'row mb-3 bill-item';
-    itemDiv.innerHTML = `
-        <div class="col-md-4">
-            <label class="form-label">Description</label>
-            <input type="text" class="form-control" name="items[${itemCount}][description]" 
-                   placeholder="Service or item description" required>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Quantity</label>
-            <input type="number" class="form-control quantity-input" name="items[${itemCount}][quantity]" 
-                   min="1" value="1" required>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Unit Price</label>
-            <div class="input-group">
-                <span class="input-group-text">₱</span>
-                <input type="number" class="form-control unit-price-input" name="items[${itemCount}][unit_price]" 
-                       min="0" step="0.01" required>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Total</label>
-            <div class="input-group">
-                <span class="input-group-text">₱</span>
-                <input type="text" class="form-control item-total" readonly>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">&nbsp;</label>
-            <div class="d-grid">
-                <button type="button" class="btn btn-outline-danger" onclick="removeBillItem(this)">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    `;
-    
-    billItems.appendChild(itemDiv);
-    
-    // Add event listeners for calculation
-    const quantityInput = itemDiv.querySelector('.quantity-input');
-    const unitPriceInput = itemDiv.querySelector('.unit-price-input');
-    
-    quantityInput.addEventListener('input', calculateItemTotal);
-    unitPriceInput.addEventListener('input', calculateItemTotal);
-    
-    itemCount++;
-    document.getElementById('item_count').value = itemCount;
-    
-    updateSubmitButton();
-}
 
-function addQuickItem(description, quantity, unitPrice) {
-    addBillItem();
-    
-    const lastItem = document.querySelector('.bill-item:last-child');
-    lastItem.querySelector('input[name$="[description]"]').value = description;
-    lastItem.querySelector('input[name$="[quantity]"]').value = quantity;
-    lastItem.querySelector('input[name$="[unit_price]"]').value = unitPrice;
-    
-    calculateItemTotal();
-}
+    // Initial call to set visibility on page load
+    toggleDueDateVisibility();
 
-function removeBillItem(button) {
-    const itemDiv = button.closest('.bill-item');
-    itemDiv.remove();
-    
-    calculateGrandTotal();
-    updateSubmitButton();
-    
-    // Show empty message if no items
-    const remainingItems = document.querySelectorAll('.bill-item');
-    if (remainingItems.length === 0) {
-        document.getElementById('emptyItemsMessage').style.display = 'block';
+    // Add event listener for the Cancel button
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', clearForm);
     }
-}
 
-function calculateItemTotal() {
-    const item = event.target.closest('.bill-item');
-    const quantity = parseFloat(item.querySelector('.quantity-input').value) || 0;
-    const unitPrice = parseFloat(item.querySelector('.unit-price-input').value) || 0;
-    const total = quantity * unitPrice;
-    
-    item.querySelector('.item-total').value = total.toFixed(2);
-    
-    calculateGrandTotal();
-}
-
-function calculateGrandTotal() {
-    let total = 0;
-    document.querySelectorAll('.item-total').forEach(input => {
-        total += parseFloat(input.value) || 0;
-    });
-    
-    document.getElementById('subtotal').textContent = '₱' + total.toLocaleString('en-US', {minimumFractionDigits: 2});
-    document.getElementById('total').textContent = '₱' + total.toLocaleString('en-US', {minimumFractionDigits: 2});
-}
-
-function updateSubmitButton() {
-    const items = document.querySelectorAll('.bill-item');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    let hasValidItems = false;
-    items.forEach(item => {
-        const description = item.querySelector('input[name$="[description]"]').value.trim();
-        const quantity = parseFloat(item.querySelector('input[name$="[quantity]"]').value) || 0;
-        const unitPrice = parseFloat(item.querySelector('input[name$="[unit_price]"]').value) || 0;
-        
-        if (description && quantity > 0 && unitPrice > 0) {
-            hasValidItems = true;
-        }
-    });
-    
-    submitBtn.disabled = !hasValidItems;
-}
-
-// Form validation
-document.getElementById('billForm').addEventListener('submit', function(e) {
-    const items = document.querySelectorAll('.bill-item');
-    
-    if (items.length === 0) {
-        e.preventDefault();
-        alert('Please add at least one bill item.');
-        return false;
-    }
-    
-    let hasValidItems = false;
-    items.forEach(item => {
-        const description = item.querySelector('input[name$="[description]"]').value.trim();
-        const quantity = parseFloat(item.querySelector('input[name$="[quantity]"]').value) || 0;
-        const unitPrice = parseFloat(item.querySelector('input[name$="[unit_price]"]').value) || 0;
-        
-        if (description && quantity > 0 && unitPrice > 0) {
-            hasValidItems = true;
-        }
-    });
-    
-    if (!hasValidItems) {
-        e.preventDefault();
-        alert('Please ensure all bill items have valid description, quantity, and unit price.');
-        return false;
-    }
-});
-
-// Monitor form changes
-document.addEventListener('input', function(e) {
-    if (e.target.closest('.bill-item')) {
-        updateSubmitButton();
-    }
 });
 </script>
 {% endblock %}

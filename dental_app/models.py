@@ -185,31 +185,29 @@ class BillItem(models.Model):
 
 
 class InventoryItem(models.Model):
-    """Inventory model for managing dental supplies"""
     CATEGORY_CHOICES = [
-        ('Instruments', 'Instruments'),
-        ('Materials', 'Materials'),
-        ('Supplies', 'Supplies'),
-        ('Equipment', 'Equipment'),
-        ('Medications', 'Medications'),
+        ('dental_supplies', 'Dental Supplies'),
+        ('equipment', 'Equipment'),
+        ('medications', 'Medications'),
+        ('consumables', 'Consumables'),
+        ('instruments', 'Instruments'),
     ]
     
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
-    current_stock = models.IntegerField(default=0)
-    minimum_stock = models.IntegerField(default=10)
-    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='dental_supplies')
+    quantity = models.IntegerField()
+    unit = models.CharField(max_length=20, default='pieces')
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     supplier = models.CharField(max_length=100, blank=True)
-    last_restocked = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def is_low_stock(self):
         return self.current_stock <= self.minimum_stock
     
     def __str__(self):
-        return self.name
-    
+        return f"{self.name} ({self.quantity} {self.unit})"
     class Meta:
         ordering = ['name']
 

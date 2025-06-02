@@ -2,6 +2,116 @@
 
 {% block title %}Reports & Analytics - Dental Practice Management System{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
+<style>
+    .analytics-container {
+        background: #f8f9fa;
+        min-height: 100vh;
+        padding: 20px;
+    }
+    
+    .analytics-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        height: 400px;
+        position: relative;
+    }
+    
+    .analytics-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .chart-wrapper {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+    
+    .bar-chart-container {
+        width: 60%;
+        height: 100%;
+        float: left;
+    }
+    
+    .pie-chart-container {
+        width: 40%;
+        height: 100%;
+        float: right;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .metrics-row {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    
+    .metric-item {
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #3498db;
+        margin-bottom: 5px;
+    }
+    
+    .metric-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .live-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: #27ae60;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+        margin-right: 8px;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    .trend-arrow {
+        color: #27ae60;
+        font-size: 1.5rem;
+        position: absolute;
+        top: 20px;
+        right: 25px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row">
@@ -23,7 +133,7 @@
                 </div>
             </div>
         </div>
-    </div>
+                    </div>
 
     <!-- Key Metrics -->
     <div class="row mb-4">
@@ -103,7 +213,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-clock me-2 text-primary"></i>
-                        Real-time Appointment Trends
+                        Appointment Trends
                     </h5>
                     <span class="badge bg-success">LIVE</span>
                 </div>
@@ -132,7 +242,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-user-check me-2 text-success"></i>
-                        Patient Visits Today
+                        Patient Visits
                     </h5>
                     <span class="badge bg-success">LIVE</span>
                 </div>
@@ -177,15 +287,15 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted">Anesthesia</span>
                             <span class="badge bg-success">Good</span>
-                        </div>
+                </div>
                         <div class="progress mb-3" style="height: 8px;">
                             <div class="progress-bar bg-success" role="progressbar" style="width: 80%"></div>
-                        </div>
+                    </div>
 
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted">X-ray Films</span>
                             <span class="badge bg-danger">Critical</span>
-                        </div>
+                    </div>
                         <div class="progress mb-3" style="height: 8px;">
                             <div class="progress-bar bg-danger" role="progressbar" style="width: 10%"></div>
                         </div>
@@ -197,9 +307,9 @@
                         </button>
                     </div>
                 </div>
+                </div>
             </div>
         </div>
-    </div>
 
     <!-- Charts Row 1 -->
     <div class="row mb-4">
@@ -210,7 +320,7 @@
                         <i class="fas fa-chart-area me-2"></i>
                         Revenue Trend (Last 12 Months)
                     </h5>
-                </div>
+                    </div>
                 <div class="card-body">
                     <canvas id="revenueChart" height="300"></canvas>
                 </div>
@@ -227,10 +337,10 @@
                 </div>
                 <div class="card-body">
                     <canvas id="treatmentChart" height="300"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Charts Row 2 -->
     <div class="row mb-4">
@@ -524,256 +634,417 @@
 </div>
 
 <div class="row">
-                 <div class="col-md-3">
-                        <div class="card text-white bg-primary h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h6 class="card-title mb-0">Today's Appointments</h6>
-                                        <h3 class="mb-0" id="todays-appointments">{{ stats.todays_appointments }}</h3>
-                                        <small class="opacity-75">Scheduled today</small>
-                                    </div>
-                                    <i class="fas fa-calendar-check fa-2x opacity-75"></i>
-                                </div>
-                            </div>
-                        </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title mb-0">Today's Appointments</h6>
+                        <h3 class="mb-0" id="todays-appointments">{{ stats.todays_appointments }}</h3>
+                        <small class="opacity-75">Scheduled today</small>
                     </div>
-
-                 <div class="col-md-3">
-                        <div class="card text-white bg-info h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h6 class="card-title mb-0">Today's Visits</h6>
-                                        <h3 class="mb-0" id="today-visits">{{ stats.todays_appointments }}</h3>
-                                        <small class="opacity-75">Completed treatments</small>
-                                    </div>
-                                    <i class="fas fa-user-check fa-2x opacity-75"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Appointment Trends</h6>
-                                <div id="appointment-trends">
-                                    <!-- Appointment trends will be loaded here -->
-                                    <div class="text-muted">Loading appointment trends...</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Inventory Usage</h6>
-                                <div id="inventory-usage">
-                                    <!-- Inventory usage will be loaded here -->
-                                    <div class="text-muted">Loading inventory data...</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <i class="fas fa-calendar-check fa-2x opacity-75"></i>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-info h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title mb-0">Today's Visits</h6>
+                        <h3 class="mb-0" id="today-visits">{{ stats.todays_appointments }}</h3>
+                        <small class="opacity-75">Completed treatments</small>
+                    </div>
+                    <i class="fas fa-user-check fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-title">Appointment Trends</h6>
+                <div id="appointment-trends">
+                    <!-- Appointment trends will be loaded here -->
+                    <div class="text-muted">Loading appointment trends...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-title">Inventory Usage</h6>
+                <div id="inventory-usage">
+                    <!-- Inventory usage will be loaded here -->
+                    <div class="text-muted">Loading inventory data...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    initializeCharts();
-});
-
-// Global chart variables for real-time updates
-let appointmentTrendsChart, patientVisitsChart;
-
-function initializeCharts() {
-    // Real-time Appointment Trends Chart
-    const appointmentTrendsCtx = document.getElementById('appointmentTrendsChart').getContext('2d');
-    appointmentTrendsChart = new Chart(appointmentTrendsCtx, {
-        type: 'line',
-        data: {
-            labels: ['8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM'],
-            datasets: [{
-                label: 'Appointments',
-                data: [2, 3, 1, 4, 2, 5, 8, 6, 3, 2],
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#007bff',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 10
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            animation: {
-                duration: 1000,
-                easing: 'easeInOutQuart'
+    // Initialize flatpickr for date range selection
+    flatpickr("#dateRangePicker", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        defaultDate: ["{{ start_date }}", "{{ end_date }}"],
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length === 2) {
+                const startDate = moment(selectedDates[0]).format('YYYY-MM-DD');
+                const endDate = moment(selectedDates[1]).format('YYYY-MM-DD');
+                // Update the form action or submit the form
+                window.location.href = `/reports?start_date=${startDate}&end_date=${endDate}`;
             }
         }
     });
 
-    // Patient Visits Chart (Hourly progress)
-    const patientVisitsCtx = document.getElementById('patientVisitsChart').getContext('2d');
-    patientVisitsChart = new Chart(patientVisitsCtx, {
-        type: 'bar',
-        data: {
-            labels: ['8AM', '10AM', '12PM', '2PM', '4PM', '6PM'],
-            datasets: [{
-                label: 'Visits',
-                data: [2, 5, 3, 4, 1, 0],
-                backgroundColor: ['#28a745', '#28a745', '#28a745', '#28a745', '#28a745', '#e9ecef'],
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 6
-                }
+    // Global chart variables for real-time updates
+    let appointmentTrendsChart, patientVisitsChart;
+
+    function initializeCharts() {
+        // Real-time Appointment Trends Chart
+        const appointmentTrendsCtx = document.getElementById('appointmentTrendsChart').getContext('2d');
+        appointmentTrendsChart = new Chart(appointmentTrendsCtx, {
+            type: 'line',
+            data: {
+                labels: ['8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM'],
+                datasets: [{
+                    label: 'Appointments',
+                    data: [2, 3, 1, 4, 2, 5, 8, 6, 3, 2],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#007bff',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
             },
-            plugins: {
-                legend: {
-                    display: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
                 }
             }
-        }
-    });
+        });
 
-    // Revenue Trend Chart
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [{
-                label: 'Revenue',
-                data: [65000, 59000, 80000, 81000, 56000, 85000, 90000, 75000, 88000, 95000, 70000, 85000],
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '₱' + value.toLocaleString();
-                        }
+        // Patient Visits Chart (Hourly progress)
+        const patientVisitsCtx = document.getElementById('patientVisitsChart').getContext('2d');
+        patientVisitsChart = new Chart(patientVisitsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['8AM', '10AM', '12PM', '2PM', '4PM', '6PM'],
+                datasets: [{
+                    label: 'Visits',
+                    data: [2, 5, 3, 4, 1, 0],
+                    backgroundColor: ['#28a745', '#28a745', '#28a745', '#28a745', '#28a745', '#e9ecef'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 6
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
                     }
                 }
+            }
+        });
+
+        // Revenue Trend Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [65000, 59000, 80000, 81000, 56000, 85000, 90000, 75000, 88000, 95000, 70000, 85000],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            plugins: {
-                legend: {
-                    display: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₱' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Treatment Distribution Chart
-    const treatmentCtx = document.getElementById('treatmentChart').getContext('2d');
-    new Chart(treatmentCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Cleaning', 'Filling', 'Root Canal', 'Extraction', 'Crown', 'Other'],
-            datasets: [{
-                data: [45, 32, 12, 18, 8, 15],
-                backgroundColor: [
-                    '#007bff',
-                    '#28a745',
-                    '#ffc107',
-                    '#dc3545',
-                    '#6f42c1',
-                    '#20c997'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-
-    // Daily Appointments Chart
-    const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
-    new Chart(appointmentsCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Appointments',
-                data: [12, 19, 15, 17, 20, 8, 3],
-                backgroundColor: '#007bff',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+        // Treatment Distribution Chart
+        const treatmentCtx = document.getElementById('treatmentChart').getContext('2d');
+        new Chart(treatmentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Cleaning', 'Filling', 'Root Canal', 'Extraction', 'Crown', 'Other'],
+                datasets: [{
+                    data: [45, 32, 12, 18, 8, 15],
+                    backgroundColor: [
+                        '#007bff',
+                        '#28a745',
+                        '#ffc107',
+                        '#dc3545',
+                        '#6f42c1',
+                        '#20c997'
+                    ]
+                }]
             },
-            plugins: {
-                legend: {
-                    display: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Demographics Chart
-    const demographicsCtx = document.getElementById('demographicsChart').getContext('2d');
-    new Chart(demographicsCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['18-30', '31-45', '46-60', '60+'],
-            datasets: [{
-                data: [25, 35, 30, 10],
-                backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+        // Daily Appointments Chart
+        const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+        new Chart(appointmentsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Appointments',
+                    data: [12, 19, 15, 17, 20, 8, 3],
+                    backgroundColor: '#007bff',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
             }
+        });
+
+        // Demographics Chart
+        const demographicsCtx = document.getElementById('demographicsChart').getContext('2d');
+        new Chart(demographicsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['18-30', '31-45', '46-60', '60+'],
+                datasets: [{
+                    data: [25, 35, 30, 10],
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Real-time update functions
+    function updateRealTimeData() {
+        // Simulate real-time data updates
+        updateAppointmentTrends();
+        updatePatientVisits();
+        updateInventoryStatus();
+    }
+
+    function updateAppointmentTrends() {
+        if (appointmentTrendsChart) {
+            // Generate realistic appointment data based on actual API response
+            fetch('/api/dashboard-stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.appointment_trends && data.appointment_trends.length > 0) {
+                        // Update chart with real data
+                        const chartData = data.appointment_trends.map(item => item.count);
+                        appointmentTrendsChart.data.labels = data.appointment_trends.map(item => item.hour);
+                        appointmentTrendsChart.data.datasets[0].data = chartData;
+                        appointmentTrendsChart.update('none');
+
+                        // Update stats
+                        const todaysBookings = data.stats ? data.stats.todays_appointments : 0;
+                        document.getElementById('todaysBookings').textContent = todaysBookings;
+                    } else {
+                        // Fallback to simulated data
+                        const newData = [2, 3, 1, 4, 2, 5, 8, 6, 3, 2];
+                        appointmentTrendsChart.data.datasets[0].data = newData;
+                        appointmentTrendsChart.update('none');
+                    }
+
+                    // Update peak hour
+                    document.getElementById('peakHour').textContent = '2:00 PM';
+
+                    // Update average daily
+                    document.getElementById('avgDaily').textContent = data.stats.avg_appointments_per_day;
+                })
+                .catch(error => {
+                    console.error('Error updating appointment trends:', error);
+                });
         }
-    });
+    }
+
+    function updatePatientVisits() {
+        if (patientVisitsChart) {
+            fetch('/api/dashboard-stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update visits counter with real data
+                    const todayVisits = data.today_visits || 0;
+                    document.getElementById('visitCounter').textContent = todayVisits;
+
+                    // Update progress bar
+                    const goalVisits = 15;
+                    const percentage = Math.min(100, (todayVisits / goalVisits) * 100);
+                    const progressBar = document.getElementById('visitProgress');
+                    const percentageText = document.getElementById('visitPercentage');
+
+                    if (progressBar && percentageText) {
+                        progressBar.style.width = percentage + '%';
+                        percentageText.textContent = Math.round(percentage) + '%';
+
+                        // Change color based on progress
+                        if (percentage >= 100) {
+                            progressBar.className = 'progress-bar bg-success';
+                        } else if (percentage >= 80) {
+                            progressBar.className = 'progress-bar bg-info';
+                        } else if (percentage >= 60) {
+                            progressBar.className = 'progress-bar bg-warning';
+                        } else {
+                            progressBar.className = 'progress-bar bg-danger';
+                        }
+                    }
+
+                    // Update chart with hourly data
+                    if (data.patient_visits_hourly && data.patient_visits_hourly.length > 0) {
+                         patientVisitsChart.data.labels = data.patient_visits_hourly.map(item => item.hour);
+                         patientVisitsChart.data.datasets[0].data = data.patient_visits_hourly.map(item => item.count);
+                         patientVisitsChart.update('none');
+                    } else {
+                        const hourlyData = [2, 5, 3, 4, 1, 0];
+                        patientVisitsChart.data.datasets[0].data = hourlyData;
+                        patientVisitsChart.update('none');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating patient visits:', error);
+                });
+        }
+    }
+
+    function updateInventoryStatus() {
+        fetch('/api/dashboard-stats')
+            .then(response => response.json())
+            .then(data => {
+                const inventoryContainer = document.getElementById('inventory-usage');
+                if (data.inventory_usage && inventoryContainer) {
+                    let inventoryHtml = '<h6 class="mb-3">Top Inventory Items</h6>';
+                    data.inventory_usage.slice(0, 5).forEach(item => {
+                        const alertClass = item.is_low_stock ? 'danger' : (item.usage_percentage > 50 ? 'warning' : 'success');
+                        inventoryHtml += `<div class="d-flex justify-content-between align-items-center mb-2">  
+                            <div>
+                                <small class="d-block">${item.name}</small>
+                                <small class="text-muted">${item.category}</small>
+                            </div>
+                            <span class="badge bg-${alertClass}" title="Current: ${item.current_stock}, Min: ${item.minimum_stock}">
+                                ${item.current_stock}
+                            </span>
+                        </div>`;
+                    });
+                    inventoryContainer.innerHTML = inventoryHtml;
+                }
+                const inventoryCriticalCountElement = document.getElementById('inventoryCriticalCount');
+                if (inventoryCriticalCountElement && data.stats) {
+                    inventoryCriticalCountElement.textContent = data.stats.inventory_critical_count;
+                }
+            })
+            .catch(error => {
+                console.error('Error updating inventory status:', error);
+                const inventoryContainer = document.getElementById('inventory-usage');
+                if (inventoryContainer) {
+                    inventoryContainer.innerHTML = '<div class="text-muted">Unable to load inventory data</div>';
+                }
+            });
+    }
+
+    // Auto-refresh with different intervals for better realism
+    setInterval(updateRealTimeData, 15000); // Update charts every 15 seconds
+    setInterval(updateInventoryStatus, 45000); // Update stats every 45 seconds
+
+    // Initial load
+    initializeCharts(); // This initializes the charts with initial dummy data
+    // Then update with real data from API
+    updateRealTimeData();
+    updateInventoryStatus();
+
+    // Set default date range to current month
+    setDateRange('month');
+});
+
+// Function to export report (example, needs backend implementation)
+function exportReport() {
+    alert('Export report functionality is under development!');
+}
+
+function viewInventoryDetails() {
+    window.location.href = '/inventory';
 }
 
 function setDateRange(period) {
@@ -827,272 +1098,5 @@ function applyDateRange() {
     // Refresh charts with new data
     location.reload();
 }
-
-function exportReport() {
-    // In a real application, this would generate and download a report
-    alert('Report export feature would generate PDF/Excel files with current data');
-}
-
-function viewInventoryDetails() {
-    window.location.href = '/inventory';
-}
-
-// Real-time update functions
-function updateRealTimeData() {
-    // Simulate real-time data updates
-    updateAppointmentTrends();
-    updatePatientVisits();
-    updateInventoryStatus();
-}
-
-function updateAppointmentTrends() {
-    if (appointmentTrendsChart) {
-        // Generate realistic appointment data based on actual API response
-        fetch('/api/realtime-stats')
-            .then(response => response.json())
-            .then(data => {
-                if (data.appointment_trends && data.appointment_trends.length > 0) {
-                    // Update chart with real data
-                    const last7Days = data.appointment_trends.map(trend => trend.count);
-                    const chartData = [2, 3, 1, 4, 2, 5, 8, 6, 3, 2]; // Hourly simulation
-                    
-                    appointmentTrendsChart.data.datasets[0].data = chartData;
-                    appointmentTrendsChart.update('none');
-
-                    // Update stats
-                    const todaysBookings = data.stats ? data.stats.todays_appointments : 0;
-                    const todaysBookingsElement = document.getElementById('todaysBookings');
-                    if (todaysBookingsElement) {
-                        todaysBookingsElement.textContent = todaysBookings;
-                    }
-                } else {
-                    // Fallback to simulated data
-                    const currentHour = new Date().getHours();
-                    const appointmentHours = ['8', '9', '10', '11', '12', '13', '14', '15', '16', '17'];
-                    
-                    const newData = appointmentHours.map((hour, index) => {
-                        const hourNum = parseInt(hour);
-                        let baseValue = 2;
-                        
-                        if ((hourNum >= 10 && hourNum <= 12) || (hourNum >= 14 && hourNum <= 16)) {
-                            baseValue = 4;
-                        }
-                        
-                        return Math.max(0, baseValue + Math.floor(Math.random() * 3) - 1);
-                    });
-                    
-                    appointmentTrendsChart.data.datasets[0].data = newData;
-                    appointmentTrendsChart.update('none');
-                }
-                
-                // Update peak hour
-                const peakHourElement = document.getElementById('peakHour');
-                if (peakHourElement) {
-                    peakHourElement.textContent = '2:00 PM';
-                }
-                
-                // Update average daily
-                const avgDailyElement = document.getElementById('avgDaily');
-                if (avgDailyElement) {
-                    avgDailyElement.textContent = '8.5';
-                }
-            })
-            .catch(error => {
-                console.error('Error updating appointment trends:', error);
-            });
-    }
-}
-
-function updatePatientVisits() {
-    if (patientVisitsChart) {
-        fetch('/api/realtime-stats')
-            .then(response => response.json())
-            .then(data => {
-                // Update visits counter with real data
-                const todayVisits = data.today_visits || 0;
-                const visitCounter = document.getElementById('visitCounter');
-                if (visitCounter) {
-                    visitCounter.textContent = todayVisits;
-                }
-
-                // Update progress bar
-                const goalVisits = 15;
-                const percentage = Math.min(100, (todayVisits / goalVisits) * 100);
-                const progressBar = document.getElementById('visitProgress');
-                const percentageText = document.getElementById('visitPercentage');
-                
-                if (progressBar && percentageText) {
-                    progressBar.style.width = percentage + '%';
-                    percentageText.textContent = Math.round(percentage) + '%';
-                    
-                    // Change color based on progress
-                    if (percentage >= 100) {
-                        progressBar.className = 'progress-bar bg-success';
-                    } else if (percentage >= 80) {
-                        progressBar.className = 'progress-bar bg-info';
-                    } else if (percentage >= 60) {
-                        progressBar.className = 'progress-bar bg-warning';
-                    } else {
-                        progressBar.className = 'progress-bar bg-danger';
-                    }
-                }
-
-                // Update chart with hourly data (simulated for now)
-                const hourlyData = [2, 5, 3, 4, 1, 0];
-                patientVisitsChart.data.datasets[0].data = hourlyData;
-                patientVisitsChart.update('none');
-            })
-            .catch(error => {
-                console.error('Error updating patient visits:', error);
-                // Fallback to current display
-            });
-    }
-}
-
-function updateInventoryStatus() {
-    // Simulate inventory usage updates
-    const inventoryItems = [
-        { name: 'Dental Gloves', current: 25, max: 100, element: null },
-        { name: 'Anesthesia', current: 80, max: 100, element: null },
-        { name: 'X-ray Films', current: 10, max: 100, element: null }
-    ];
-
-    // Randomly decrease inventory levels
-    inventoryItems.forEach((item, index) => {
-        if (Math.random() > 0.8) {
-            item.current = Math.max(0, item.current - 1);
-        }
-    });
-}
-
-// Real-time updates
-function updateRealTimeStats() {
-    fetch('/api/realtime-stats')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Received data:', data);
-
-            // Update appointment trends
-            const trendsContainer = document.getElementById('appointment-trends');
-            if (data.appointment_trends && trendsContainer) {
-                let trendsHtml = '<h6 class="mb-3">Last 7 Days Appointments</h6>';
-                data.appointment_trends.forEach(trend => {
-                    trendsHtml += `<div class="d-flex justify-content-between mb-2">
-                        <small>${trend.day} (${trend.date})</small>
-                        <span class="badge bg-primary">${trend.count}</span>
-                    </div>`;
-                });
-                trendsContainer.innerHTML = trendsHtml;
-            }
-
-            // Update today's visits
-            const visitsElement = document.getElementById('today-visits');
-            if (visitsElement && data.today_visits !== undefined) {
-                visitsElement.textContent = data.today_visits;
-            }
-
-            // Update inventory usage
-            const inventoryContainer = document.getElementById('inventory-usage');
-            if (data.inventory_usage && inventoryContainer) {
-                let inventoryHtml = '<h6 class="mb-3">Top Inventory Items</h6>';
-                data.inventory_usage.slice(0, 5).forEach(item => {
-                    const alertClass = item.is_low_stock ? 'danger' : (item.usage_percentage > 50 ? 'warning' : 'success');
-                    inventoryHtml += `<div class="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                            <small class="d-block">${item.name}</small>
-                            <small class="text-muted">${item.category}</small>
-                        </div>
-                        <span class="badge bg-${alertClass}" title="Current: ${item.current_stock}, Min: ${item.minimum_stock}">
-                            ${item.current_stock}
-                        </span>
-                    </div>`;
-                });
-                inventoryContainer.innerHTML = inventoryHtml;
-            }
-
-            // Update dashboard stats if available
-            if (data.stats) {
-                const todayAppointments = document.getElementById('todays-appointments');
-                if (todayAppointments && data.stats.todays_appointments !== undefined) {
-                    todayAppointments.textContent = data.stats.todays_appointments;
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error updating real-time stats:', error);
-            // Show error in containers
-            const trendsContainer = document.getElementById('appointment-trends');
-            const inventoryContainer = document.getElementById('inventory-usage');
-
-            if (trendsContainer) {
-                trendsContainer.innerHTML = '<div class="text-muted">Unable to load appointment trends</div>';
-            }
-            if (inventoryContainer) {
-                inventoryContainer.innerHTML = '<div class="text-muted">Unable to load inventory data</div>';
-            }
-        });
-}
-
-// Auto-refresh with different intervals for better realism
-setInterval(updateRealTimeData, 15000); // Update charts every 15 seconds
-setInterval(updateRealTimeStats, 45000); // Update stats every 45 seconds
-
-// Update appointment trends more frequently during business hours
-function scheduleAppointmentUpdates() {
-    const currentHour = new Date().getHours();
-    const updateInterval = (currentHour >= 8 && currentHour <= 18) ? 10000 : 60000; // 10s during business hours, 1m otherwise
-    
-    setTimeout(() => {
-        updateAppointmentTrends();
-        scheduleAppointmentUpdates(); // Reschedule
-    }, updateInterval);
-}
-
-// Update patient visits every 20 seconds during business hours
-function schedulePatientVisitsUpdates() {
-    const currentHour = new Date().getHours();
-    const updateInterval = (currentHour >= 8 && currentHour <= 18) ? 20000 : 120000; // 20s during business hours, 2m otherwise
-    
-    setTimeout(() => {
-        updatePatientVisits();
-        schedulePatientVisitsUpdates(); // Reschedule
-    }, updateInterval);
-}
-
-// Add visual indicators for live updates
-function addLiveIndicators() {
-    const liveElements = document.querySelectorAll('.badge');
-    liveElements.forEach(element => {
-        if (element.textContent && element.textContent.includes('LIVE')) {
-            setInterval(() => {
-                element.style.opacity = '0.5';
-                setTimeout(() => {
-                    element.style.opacity = '1';
-                }, 500);
-            }, 2000);
-        }
-    });
-}
-
-// Set default date range to current month
-document.addEventListener('DOMContentLoaded', function() {
-    setDateRange('month');
-    addLiveIndicators();
-
-    // Start real-time updates after 3 seconds
-    setTimeout(() => {
-        updateRealTimeData();
-        updateRealTimeStats();
-        
-        // Start scheduled updates
-        scheduleAppointmentUpdates();
-        schedulePatientVisitsUpdates();
-    }, 3000);
-});
 </script>
 {% endblock %}

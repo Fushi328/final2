@@ -188,28 +188,37 @@ def get_dashboard_stats():
 
     return stats
 
-def get_realtime_appointment_trends():
-    """Get appointment trends for the last 7 days"""
-    from datetime import date, timedelta
+def get_appointment_trends():
+    """Get hourly appointment trends for the current day"""
+    from datetime import date, datetime
     from models import Appointment
     from app import db
 
     try:
         trends = []
         today = date.today()
+        
+        # Initialize counts for each hour from 8 AM to 5 PM
+        hourly_counts = {f'{h}:00' : 0 for h in range(8, 18)} # Covers 8 AM to 5 PM
 
-        for i in range(7):
-            target_date = today - timedelta(days=i)
-            count = Appointment.query.filter_by(appointment_date=target_date).count()
+        appointments_today = Appointment.query.filter_by(appointment_date=today).all()
+
+        for appointment in appointments_today:
+            hour = appointment.appointment_time.strftime('%H') # Get hour in 24-hour format
+            if hour + ':00' in hourly_counts: # Check if the hour is within our range
+                hourly_counts[hour + ':00'] += 1
+
+        # Convert to desired format (e.g., "8 AM", "9 AM")
+        for hour_24, count in hourly_counts.items():
+            hour_obj = datetime.strptime(hour_24, '%H:%M').time()
             trends.append({
-                'date': target_date.strftime('%Y-%m-%d'),
-                'day': target_date.strftime('%a'),
+                'hour': hour_obj.strftime('%I %p').lstrip('0'), # Format to "8 AM" or "12 PM"
                 'count': count
             })
 
-        return list(reversed(trends))
+        return trends
     except Exception as e:
-        print(f"Error getting appointment trends: {e}")
+        print(f"Error getting hourly appointment trends: {e}")
         return []
 
 def get_inventory_usage_trends():
@@ -267,3 +276,54 @@ def calculate_age(birth_date):
     """Calculate age from birth date"""
     today = date.today()
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+
+def get_patient_visits_hourly():
+    """Get hourly patient visits for the current day"""
+    from datetime import date, datetime
+    from models import Treatment
+    from app import db
+
+    try:
+        hourly_visits = {f'{h}:00' : 0 for h in range(8, 18)} # Covers 8 AM to 5 PM
+
+        completed_treatments_today = Treatment.query.filter(
+            Treatment.treatment_date == date.today(),
+            Treatment.status == 'Completed'
+        ).all()
+
+        for treatment in completed_treatments_today:
+            # Assuming treatment.treatment_date has time component or can be inferred
+            # If not, we might need to adjust how time is stored or approximated
+            treatment_time = treatment.treatment_date # Placeholder, assuming it's a datetime object
+            if isinstance(treatment.treatment_date, datetime):
+                treatment_time = treatment.treatment_date.time()
+            elif isinstance(treatment.treatment_date, date):
+                # If only date is stored, we can't get hourly, so we'll approximate or use a default time
+                # For now, let's assume a default time or a proper datetime object
+                pass # Will need clarification if this is the case
+
+            # For simplicity, let's assume treatment_date is always a datetime or has a time component
+            # If it's just a date, we might need to adjust logic or data model
+            if hasattr(treatment, 'treatment_time') and treatment.treatment_time: # Assuming a separate time field exists
+                hour = treatment.treatment_time.strftime('%H')
+            elif isinstance(treatment.treatment_date, datetime):
+                hour = treatment.treatment_date.strftime('%H')
+            else:
+                # Fallback if no specific time is available, consider it for a default hour or skip
+                continue # Skip if no time information
+
+            if hour + ':00' in hourly_visits:
+                hourly_visits[hour + ':00'] += 1
+        
+        trends = []
+        for hour_24, count in hourly_visits.items():
+            hour_obj = datetime.strptime(hour_24, '%H:%M').time()
+            trends.append({
+                'hour': hour_obj.strftime('%I %p').lstrip('0'),
+                'count': count
+            })
+
+        return trends
+    except Exception as e:
+        print(f"Error getting hourly patient visits: {e}")
+        return []

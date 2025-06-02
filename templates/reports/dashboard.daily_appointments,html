@@ -1,0 +1,8 @@
+{% extends 'base.html' %}12:00 PM"
+        else:
+            peak_hour = f"{peak_
+        'todays_visits': todays_hour_24 -visits,
+        'last
+{% load static %}
+
+{% block title

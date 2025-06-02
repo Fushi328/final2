@@ -68,7 +68,7 @@ class BillForm(FlaskForm):
     patient_id = SelectField('Patient', coerce=int, validators=[DataRequired()])
     due_date = DateField('Due Date', validators=[DataRequired()])
     payment_method = SelectField('Payment Method', 
-                                choices=[('Cash', 'Cash'), ('BDO Bank Transfer', 'BDO Bank Transfer')],
+                                choices=[('Cash', 'Cash'), ('BDO Bank Transfer', 'BDO Bank Transfer'), ('GCash', 'GCash')],
                                 validators=[Optional()])
     notes = TextAreaField('Notes')
 
@@ -80,7 +80,7 @@ class BillItemForm(FlaskForm):
 class PaymentForm(FlaskForm):
     amount = DecimalField('Payment Amount', validators=[DataRequired(), NumberRange(min=0)])
     payment_method = SelectField('Payment Method',
-                                choices=[('Cash', 'Cash'), ('BDO Bank Transfer', 'BDO Bank Transfer')],
+                                choices=[('Cash', 'Cash'), ('BDO Bank Transfer', 'BDO Bank Transfer'), ('GCash', 'GCash')],
                                 validators=[DataRequired()])
     notes = TextAreaField('Payment Notes')
 

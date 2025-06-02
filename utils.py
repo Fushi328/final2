@@ -140,7 +140,7 @@ Dental Clinic Team
 
 def get_dashboard_stats():
     """Get statistics for dashboard"""
-    from models import Patient, Appointment, Bill, InventoryItem
+    from models import Patient, Appointment, Bill, InventoryItem, Treatment
     from datetime import date, timedelta
     
     today = date.today()
@@ -158,7 +158,15 @@ def get_dashboard_stats():
         'low_stock_items': InventoryItem.query.filter(
             InventoryItem.current_stock <= InventoryItem.minimum_stock
         ).count(),
-        'total_revenue_month': 0
+        'total_revenue_month': 0,
+        'completed_treatments_today': Treatment.query.filter_by(
+            treatment_date=today, 
+            status='Completed'
+        ).count(),
+        'avg_appointments_per_day': 0,
+        'inventory_critical_count': InventoryItem.query.filter(
+            InventoryItem.current_stock <= (InventoryItem.minimum_stock * 0.1)
+        ).count()
     }
     
     # Calculate monthly revenue
@@ -168,6 +176,67 @@ def get_dashboard_stats():
     ).all()
     
     stats['total_revenue_month'] = sum(float(bill.paid_amount) for bill in monthly_bills)
+    
+    # Calculate average appointments per day (last 30 days)
+    past_30_days = today - timedelta(days=30)
+    total_appointments_30_days = Appointment.query.filter(
+        Appointment.appointment_date >= past_30_days,
+        Appointment.appointment_date <= today
+    ).count()
+    
+    stats['avg_appointments_per_day'] = round(total_appointments_30_days / 30, 1)
+    
+    return stats
+
+def get_realtime_appointment_trends():
+    """Get hourly appointment trends for today"""
+    from models import Appointment
+    from datetime import date, datetime, timedelta
+    
+    today = date.today()
+    hourly_data = {}
+    
+    # Initialize hourly slots
+    for hour in range(8, 18):  # 8 AM to 6 PM
+        hourly_data[hour] = 0
+    
+    # Get today's appointments
+    appointments = Appointment.query.filter_by(appointment_date=today).all()
+    
+    for appointment in appointments:
+        hour = appointment.appointment_time.hour
+        if hour in hourly_data:
+            hourly_data[hour] += 1
+    
+    return hourly_data
+
+def get_inventory_usage_trends():
+    """Get inventory usage trends"""
+    from models import InventoryItem
+    
+    items = InventoryItem.query.all()
+    usage_data = []
+    
+    for item in items:
+        usage_percentage = (item.current_stock / max(item.minimum_stock * 3, 1)) * 100
+        status = 'good'
+        
+        if item.current_stock <= item.minimum_stock * 0.1:
+            status = 'critical'
+        elif item.current_stock <= item.minimum_stock:
+            status = 'low'
+        
+        usage_data.append({
+            'name': item.name,
+            'current_stock': item.current_stock,
+            'minimum_stock': item.minimum_stock,
+            'usage_percentage': min(100, usage_percentage),
+            'status': status
+        })
+    
+    # Sort by status priority (critical first)
+    status_priority = {'critical': 0, 'low': 1, 'good': 2}
+    usage_data.sort(key=lambda x: status_priority.get(x['status'], 3))
     
     return stats
 

@@ -177,16 +177,6 @@ def get_dashboard_stats():
 
     stats['total_revenue_month'] = sum(float(bill.paid_amount) for bill in monthly_bills)
 
-    # Calculate average appointments per day
-    total_appointments = Appointment.query.count()
-    if total_appointments > 0:
-        first_appointment = Appointment.query.order_by(Appointment.created_at.asc()).first()
-        if first_appointment:
-            days_since_first = (today - first_appointment.created_at.date()).days + 1
-            stats['avg_appointments_per_day'] = round(total_appointments / max(days_since_first, 1), 1)
-
-    return statshly_bills)
-
     # Calculate average appointments per day (last 30 days)
     past_30_days = today - timedelta(days=30)
     total_appointments_30_days = Appointment.query.filter(

@@ -13,8 +13,152 @@ from decimal import Decimal
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import app, db
-from models import Staff, Patient, Appointment, Treatment, Bill, BillItem, InventoryItem
+from models import Staff, Patient, Appointment, Treatment, Bill, BillItem, InventoryItem, Communication
 from werkzeug.security import generate_password_hash
+
+def create_sample_data():
+    """Create comprehensive sample data for the dental management system"""
+    print("Creating sample data...")
+    
+    # Create admin staff
+    admin = Staff(
+        username='admin',
+        email='admin@dental.com',
+        password_hash=generate_password_hash('admin123'),
+        first_name='Admin',
+        last_name='User',
+        role='Admin',
+        phone='555-0001',
+        is_active=True
+    )
+    db.session.add(admin)
+    
+    # Create sample patients
+    patients_data = [
+        ('John', 'Doe', '1985-03-15', 'Male', '555-1001', 'john.doe@email.com'),
+        ('Jane', 'Smith', '1990-07-22', 'Female', '555-1002', 'jane.smith@email.com'),
+        ('Mike', 'Johnson', '1978-11-08', 'Male', '555-1003', 'mike.johnson@email.com'),
+        ('Sarah', 'Brown', '1992-05-12', 'Female', '555-1004', 'sarah.brown@email.com'),
+        ('David', 'Wilson', '1988-09-30', 'Male', '555-1005', 'david.wilson@email.com')
+    ]
+    
+    patients = []
+    for fname, lname, dob, gender, phone, email in patients_data:
+        patient = Patient(
+            first_name=fname,
+            last_name=lname,
+            date_of_birth=datetime.strptime(dob, '%Y-%m-%d').date(),
+            gender=gender,
+            phone=phone,
+            email=email,
+            address=f"123 Main St, City, State",
+            medical_history="No known allergies",
+            dental_history="Regular checkups"
+        )
+        patients.append(patient)
+        db.session.add(patient)
+    
+    db.session.flush()  # Get patient IDs
+    
+    # Create today's appointments for real-time demo
+    from datetime import time
+    appointment_times = [
+        time(9, 0), time(10, 30), time(11, 0), time(14, 0), 
+        time(15, 30), time(16, 0)
+    ]
+    
+    for i, apt_time in enumerate(appointment_times):
+        if i < len(patients):
+            appointment = Appointment(
+                patient_id=patients[i].id,
+                staff_id=admin.id,
+                appointment_date=date.today(),
+                appointment_time=apt_time,
+                duration=30,
+                appointment_type='Checkup',
+                status='Scheduled'
+            )
+            db.session.add(appointment)
+    
+    # Create sample inventory items
+    inventory_items = [
+        ('Dental Gloves', 'Disposable latex gloves', 'Consumables', 25, 100, 0.50),
+        ('Anesthesia', 'Local anesthetic cartridges', 'Medications', 80, 50, 15.00),
+        ('X-ray Films', 'Digital x-ray films', 'Equipment', 10, 100, 5.00),
+        ('Dental Floss', 'Patient education floss', 'Hygiene', 150, 50, 2.00),
+        ('Fluoride', 'Fluoride treatment gel', 'Treatment', 45, 20, 25.00)
+    ]
+    
+    for name, desc, category, stock, min_stock, cost in inventory_items:
+        item = InventoryItem(
+            name=name,
+            description=desc,
+            category=category,
+            current_stock=stock,
+            minimum_stock=min_stock,
+            unit_cost=Decimal(str(cost)),
+            supplier='Dental Supply Co.',
+            last_restocked=date.today() - timedelta(days=30)
+        )
+        db.session.add(item)
+    
+    # Create sample treatments
+    treatment = Treatment(
+        patient_id=patients[0].id,
+        staff_id=admin.id,
+        treatment_date=date.today(),
+        procedure_name='Dental Cleaning',
+        diagnosis='Routine cleaning',
+        treatment_notes='Standard cleaning procedure completed',
+        cost=Decimal('2500.00'),
+        status='Completed'
+    )
+    db.session.add(treatment)
+    
+    # Create sample bill
+    bill = Bill(
+        patient_id=patients[0].id,
+        bill_date=date.today(),
+        due_date=date.today() + timedelta(days=30),
+        total_amount=Decimal('2500.00'),
+        paid_amount=Decimal('0.00'),
+        status='Pending',
+        payment_method='Cash'
+    )
+    db.session.add(bill)
+    db.session.flush()
+    
+    # Add bill item
+    bill_item = BillItem(
+        bill_id=bill.id,
+        description='Dental Cleaning',
+        quantity=1,
+        unit_price=Decimal('2500.00'),
+        total_price=Decimal('2500.00')
+    )
+    db.session.add(bill_item)
+    
+    db.session.commit()
+    print("Sample data created successfully!")
+
+if __name__ == '__main__':
+    with app.app_context():
+        print("Initializing Dental Management System Database...")
+        
+        # Create all tables
+        db.create_all()
+        print("Database tables created.")
+        
+        # Check if admin user already exists
+        if not Staff.query.filter_by(username='admin').first():
+            create_sample_data()
+        else:
+            print("Sample data already exists.")
+        
+        print("Setup complete!")
+        print("\nLogin credentials:")
+        print("Username: admin")
+        print("Password: admin123")
 
 def create_sample_data():
     """Create sample data for demonstration"""

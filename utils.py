@@ -177,6 +177,16 @@ def get_dashboard_stats():
     
     stats['total_revenue_month'] = sum(float(bill.paid_amount) for bill in monthly_bills)
     
+    # Calculate average appointments per day
+    total_appointments = Appointment.query.count()
+    if total_appointments > 0:
+        first_appointment = Appointment.query.order_by(Appointment.created_at.asc()).first()
+        if first_appointment:
+            days_since_first = (today - first_appointment.created_at.date()).days + 1
+            stats['avg_appointments_per_day'] = round(total_appointments / max(days_since_first, 1), 1)
+    
+    return statshly_bills)
+    
     # Calculate average appointments per day (last 30 days)
     past_30_days = today - timedelta(days=30)
     total_appointments_30_days = Appointment.query.filter(
@@ -208,7 +218,7 @@ def get_realtime_appointment_trends():
         if hour in hourly_data:
             hourly_data[hour] += 1
     
-    return hourly_data
+    return hourly_dataourly_data
 
 def get_inventory_usage_trends():
     """Get inventory usage trends"""
@@ -238,7 +248,7 @@ def get_inventory_usage_trends():
     status_priority = {'critical': 0, 'low': 1, 'good': 2}
     usage_data.sort(key=lambda x: status_priority.get(x['status'], 3))
     
-    return stats
+    return usage_data
 
 def get_upcoming_appointments(days=7):
     """Get upcoming appointments for the next few days"""
@@ -252,7 +262,7 @@ def get_upcoming_appointments(days=7):
         Appointment.appointment_date >= today,
         Appointment.appointment_date <= end_date,
         Appointment.status == 'Scheduled'
-    ).order_by(Appointment.appointment_date, Appointment.appointment_time).all()
+    ).order_by(Appointment.appointment_date, Appointment.appointment_time).all()ime).all()
 
 def format_currency(amount):
     """Format amount as currency"""

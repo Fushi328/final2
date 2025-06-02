@@ -35,31 +35,32 @@ def login():
 @login_required
 def realtime_stats():
     """API endpoint for real-time dashboard updates"""
-    from utils import get_realtime_appointment_trends, get_inventory_usage_trends
-    
-    # Get current stats
-    stats = get_dashboard_stats()
-    appointment_trends = get_realtime_appointment_trends()
-    inventory_trends = get_inventory_usage_trends()
-    
-    # Get today's completed visits
-    today_visits = Treatment.query.filter_by(
-        treatment_date=date.today(),
-        status='Completed'
-    ).count()
-    
-    data = {
-        'appointment_trends': appointment_trends,
-        'today_visits': today_visits,
-        'inventory_usage': inventory_trends[:5],  # Top 5 items
-        'stats': {
-            'todays_appointments': stats['todays_appointments'],
-            'avg_appointments_per_day': stats['avg_appointments_per_day'],
-            'inventory_critical_count': stats['inventory_critical_count']
+    try:
+        # Get current stats
+        stats = get_dashboard_stats()
+        appointment_trends = get_realtime_appointment_trends()
+        inventory_trends = get_inventory_usage_trends()
+        
+        # Get today's completed visits
+        today_visits = Treatment.query.filter_by(
+            treatment_date=date.today(),
+            status='Completed'
+        ).count()
+        
+        data = {
+            'appointment_trends': appointment_trends,
+            'today_visits': today_visits,
+            'inventory_usage': inventory_trends[:5],  # Top 5 items
+            'stats': {
+                'todays_appointments': stats['todays_appointments'],
+                'avg_appointments_per_day': stats.get('avg_appointments_per_day', 0),
+                'inventory_critical_count': stats['inventory_critical_count']
+            }
         }
-    }
-    
-    return jsonify(data)
+        
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/logout')
 @login_required

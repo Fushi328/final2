@@ -257,7 +257,7 @@ def get_upcoming_appointments(days=7):
         Appointment.appointment_date >= today,
         Appointment.appointment_date <= end_date,
         Appointment.status == 'Scheduled'
-    ).order_by(Appointment.appointment_date, Appointment.appointment_time).all()ime).all()
+    ).order_by(Appointment.appointment_date, Appointment.appointment_time).all()
 
 def format_currency(amount):
     """Format amount as currency"""

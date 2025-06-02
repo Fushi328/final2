@@ -262,97 +262,81 @@ def billing_index():
 def billing_add():
     form = BillForm()
     form.patient_id.choices = [(p.id, p.get_full_name()) for p in Patient.query.order_by(Patient.last_name).all()]
-    
-    if request.is_json:
-        data = request.json
-        patient_id = data.get('patient_id')
-        due_date_str = data.get('due_date')
-        payment_method = data.get('payment_method')
-        notes = data.get('notes')
-        bill_items_data = data.get('bill_items', [])
-
-        try:
-            due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-        except (ValueError, TypeError):
-            return jsonify({'success': False, 'message': 'Invalid due date format'}), 400
-
-        if not patient_id:
-            return jsonify({'success': False, 'message': 'Patient ID is required'}), 400
-
-        bill = Bill(
-            patient_id=patient_id,
-            bill_date=date.today(),
-            due_date=due_date,
-            total_amount=0,
-            payment_method=payment_method,
-            notes=notes
-        )
-        db.session.add(bill)
-        db.session.flush()
-
-        total = 0
-        for item_data in bill_items_data:
-            description = item_data.get('description')
-            quantity = item_data.get('quantity')
-            unit_price = item_data.get('unit_price')
-
-            if description and quantity is not None and unit_price is not None and quantity > 0 and unit_price >= 0:
-                total_price = quantity * unit_price
-                bill_item = BillItem(
-                    bill_id=bill.id,
-                    description=description,
-                    quantity=quantity,
-                    unit_price=unit_price,
-                    total_price=total_price
-                )
-                db.session.add(bill_item)
-                total += total_price
-            else:
-                db.session.rollback()
-                return jsonify({'success': False, 'message': 'Invalid bill item data'}), 400
-        
-        bill.total_amount = total
-        db.session.commit()
-        return jsonify({'success': True, 'bill_id': bill.id, 'message': 'Bill created successfully!'}), 200
 
     if form.validate_on_submit():
-        bill = Bill(
-            patient_id=form.patient_id.data,
-            bill_date=date.today(),
-            due_date=form.due_date.data,
-            total_amount=0,  # Will be calculated from items
-            payment_method=form.payment_method.data,
-            notes=form.notes.data
-        )
-        db.session.add(bill)
-        db.session.flush()  # Get the ID before committing
-        
-        # Add bill items from session or form
-        total = 0
-        item_count = int(request.form.get('item_count', 0))
-        
-        for i in range(item_count):
-            description = request.form.get(f'items[{i}][description]')
-            quantity = int(request.form.get(f'items[{i}][quantity]', 0))
-            unit_price = float(request.form.get(f'items[{i}][unit_price]', 0))
+        try:
+            bill = Bill(
+                patient_id=form.patient_id.data,
+                bill_date=date.today(),
+                due_date=form.due_date.data,
+                payment_method=form.payment_method.data,
+                notes=form.notes.data,
+                status='Pending',
+                total_amount=0
+            )
+            db.session.add(bill)
+            db.session.flush() # To get bill.id before commit
+
+            total_amount = 0
+            item_count_str = request.form.get('item_count', '0')
+            try:
+                item_count = int(item_count_str)
+            except (ValueError, TypeError):
+                item_count = 0
+
+            for i in range(item_count):
+                description = request.form.get(f'items[{i}][description]', '')
+                
+                quantity_str = request.form.get(f'items[{i}][quantity]', '0')
+                try:
+                    quantity = int(quantity_str)
+                except (ValueError, TypeError):
+                    quantity = 0
+                
+                unit_price_str = request.form.get(f'items[{i}][unit_price]', '0.0')
+                try:
+                    unit_price = float(unit_price_str)
+                except (ValueError, TypeError):
+                    unit_price = 0.0
+                
+                total_price_str = request.form.get(f'items[{i}][total_price]', '0.0')
+                try:
+                    total_price = float(total_price_str)
+                except (ValueError, TypeError):
+                    total_price = 0.0
+
+                if description and quantity > 0 and unit_price >= 0:
+                    item = BillItem(
+                        bill_id=bill.id,
+                        description=description,
+                        quantity=quantity,
+                        unit_price=unit_price,
+                        total_price=total_price
+                    )
+                    db.session.add(item)
+                    total_amount += total_price
+
+            bill.total_amount = total_amount
+            db.session.commit()
+
+            flash(f'Bill for {bill.patient.get_full_name()} created successfully! Bill ID: {bill.id}', 'success')
             
-            if description and quantity > 0 and unit_price > 0:
-                total_price = quantity * unit_price
-                bill_item = BillItem(
-                    bill_id=bill.id,
-                    description=description,
-                    quantity=quantity,
-                    unit_price=unit_price,
-                    total_price=total_price
-                )
-                db.session.add(bill_item)
-                total += total_price
-        
-        bill.total_amount = total
-        db.session.commit()
-        flash(f'Bill created for {bill.patient.get_full_name()} - Total: ₱{total:,.2f}', 'success')
-        return redirect(url_for('billing_view', id=bill.id))
+            if bill.payment_method == 'GCash':
+                return redirect(url_for('gcash_qr_payment', id=bill.id))
+            elif bill.payment_method == 'BDO Bank Transfer':
+                return redirect(url_for('bdo_qr_payment', id=bill.id))
+            else:
+                return redirect(url_for('billing_view', id=bill.id))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating bill: {str(e)}', 'danger')
+            # Re-populate form choices in case of an error
+            form.patient_id.choices = [(p.id, p.get_full_name()) for p in Patient.query.order_by(Patient.last_name).all()]
+            return render_template('billing/add.html', form=form)
     
+    # For GET request or if form validation fails
+    form.patient_id.choices = [(p.id, p.get_full_name()) for p in Patient.query.order_by(Patient.last_name).all()]
     return render_template('billing/add.html', form=form)
 
 @app.route('/billing/<int:id>')
@@ -380,6 +364,15 @@ def billing_pdf(id):
 def gcash_qr_payment(id):
     bill = Bill.query.get_or_404(id)
     return render_template('billing/gcash_qr.html', bill=bill)
+
+@app.route('/billing/<int:id>/bdo_qr')
+@login_required
+def bdo_qr_payment(id):
+    bill = Bill.query.get_or_404(id)
+    if bill.payment_method != 'BDO Bank Transfer':
+        flash('Invalid payment method for BDO QR code.', 'danger')
+        return redirect(url_for('billing_view', id=bill.id))
+    return render_template('billing/bdo_qr.html', bill=bill)
 
 @app.route('/billing/<int:id>/confirm_payment', methods=['POST'])
 @login_required

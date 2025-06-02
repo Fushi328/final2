@@ -355,7 +355,7 @@ function toggleDueDateVisibility() {
     const paymentMethodSelect = document.getElementById('paymentMethodSelect');
     const dueDateGroup = document.getElementById('dueDateGroup');
     if (paymentMethodSelect && dueDateGroup) {
-        if (paymentMethodSelect.value === 'Cash') {
+        if (paymentMethodSelect.value === 'BDO Bank Transfer' || paymentMethodSelect.value === 'GCash') {
             dueDateGroup.style.display = 'none';
         } else {
             dueDateGroup.style.display = 'block';

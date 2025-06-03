@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Staff Member - Dental Practice Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Add New Staff Member
+                </h1>
+                <a href="{{ url_for('staff_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Staff
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Personal Information -->
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            Personal Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.first_name.label(class="form-label") }}
+                                {{ form.first_name(class="form-control" + (" is-invalid" if form.first_name.errors else "")) }}
+                                {% if form.first_name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.last_name.label(class="form-label") }}
+                                {{ form.last_name(class="form-control" + (" is-invalid" if form.last_name.errors else "")) }}
+                                {% if form.last_name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control", placeholder="(555) 123-4567") }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Information -->
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-key me-2"></i>
+                            Account Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Used for login. Must be unique.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Minimum 6 characters required.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.role.label(class="form-label") }}
+                            {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else "")) }}
+                            {% if form.role.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.role.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-check">
+                            {{ form.is_active(class="form-check-input") }}
+                            {{ form.is_active.label(class="form-check-label") }}
+                            <div class="form-text">Uncheck to create an inactive account</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Role Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Role Descriptions & Permissions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="role-info">
+                                    <h6 class="text-danger">
+                                        <i class="fas fa-user-shield me-2"></i>
+                                        Administrator
+                                    </h6>
+                                    <ul class="small text-muted">
+                                        <li>Full system access</li>
+                                        <li>Manage staff accounts</li>
+                                        <li>View all reports and analytics</li>
+                                        <li>System configuration</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="role-info">
+                                    <h6 class="text-primary">
+                                        <i class="fas fa-user-md me-2"></i>
+                                        Dentist
+                                    </h6>
+                                    <ul class="small text-muted">
+                                        <li>Manage patients and treatments</li>
+                                        <li>Create treatment plans</li>
+                                        <li>View patient records</li>
+                                        <li>Schedule appointments</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="role-info">
+                                    <h6 class="text-info">
+                                        <i class="fas fa-user-nurse me-2"></i>
+                                        Dental Hygienist
+                                    </h6>
+                                    <ul class="small text-muted">
+                                        <li>Perform cleanings and preventive care</li>
+                                        <li>Update patient records</li>
+                                        <li>Assist with treatments</li>
+                                        <li>Patient education</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="role-info">
+                                    <h6 class="text-success">
+                                        <i class="fas fa-hands-helping me-2"></i>
+                                        Dental Assistant
+                                    </h6>
+                                    <ul class="small text-muted">
+                                        <li>Assist dentists during procedures</li>
+                                        <li>Prepare treatment rooms</li>
+                                        <li>Take X-rays</li>
+                                        <li>Update patient information</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="role-info">
+                                    <h6 class="text-secondary">
+                                        <i class="fas fa-desk me-2"></i>
+                                        Receptionist
+                                    </h6>
+                                    <ul class="small text-muted">
+                                        <li>Schedule and manage appointments</li>
+                                        <li>Handle patient check-in/out</li>
+                                        <li>Process payments</li>
+                                        <li>Answer phone calls</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Password Guidelines -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-lock me-2"></i>
+                            Password Security Guidelines
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Requirements:</h6>
+                                <ul class="small">
+                                    <li>Minimum 6 characters</li>
+                                    <li>Combination of letters and numbers recommended</li>
+                                    <li>Avoid common passwords</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Best Practices:</h6>
+                                <ul class="small">
+                                    <li>Use a unique password</li>
+                                    <li>Include special characters</li>
+                                    <li>Change passwords regularly</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Buttons -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('staff_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Add Staff Member
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate username based on first and last name
+    const firstNameInput = document.getElementById('first_name');
+    const lastNameInput = document.getElementById('last_name');
+    const usernameInput = document.getElementById('username');
+    
+    function generateUsername() {
+        const firstName = firstNameInput.value.toLowerCase().trim();
+        const lastName = lastNameInput.value.toLowerCase().trim();
+        
+        if (firstName && lastName) {
+            // Generate username as first initial + last name
+            const username = firstName.charAt(0) + lastName;
+            usernameInput.value = username;
+            checkUsernameAvailability(username);
+        }
+    }
+    
+    function checkUsernameAvailability(username) {
+        // In a real application, this would check username availability via AJAX
+        // For now, just provide visual feedback
+        if (username.length >= 3) {
+            usernameInput.classList.remove('is-invalid');
+            usernameInput.classList.add('is-valid');
+        }
+    }
+    
+    if (firstNameInput && lastNameInput && usernameInput) {
+        firstNameInput.addEventListener('blur', generateUsername);
+        lastNameInput.addEventListener('blur', generateUsername);
+        usernameInput.addEventListener('input', function() {
+            checkUsernameAvailability(this.value);
+        });
+    }
+    
+    // Role-based form validation
+    const roleSelect = document.getElementById('role');
+    
+    if (roleSelect) {
+        roleSelect.addEventListener('change', function() {
+            const role = this.value;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Show different warnings for different roles
+            if (role === 'Administrator') {
+                if (!confirm('You are creating an Administrator account with full system access. Continue?')) {
+                    this.value = '';
+                    return;
+                }
+            }
+            
+            // Update submit button text based on role
+            if (role) {
+                submitBtn.innerHTML = `<i class="fas fa-user-plus me-2"></i>Add ${role}`;
+            } else {
+                submitBtn.innerHTML = `<i class="fas fa-user-plus me-2"></i>Add Staff Member`;
+            }
+        });
+    }
+    
+    // Password strength indicator
+    const passwordInput = document.getElementById('password');
+    
+    if (passwordInput) {
+        const strengthIndicator = document.createElement('div');
+        strengthIndicator.className = 'mt-2';
+        passwordInput.parentNode.appendChild(strengthIndicator);
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            let feedback = [];
+            
+            if (password.length >= 6) strength++;
+            else feedback.push('At least 6 characters');
+            
+            if (/[A-Z]/.test(password)) strength++;
+            else feedback.push('Uppercase letter');
+            
+            if (/[a-z]/.test(password)) strength++;
+            else feedback.push('Lowercase letter');
+            
+            if (/[0-9]/.test(password)) strength++;
+            else feedback.push('Number');
+            
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            else feedback.push('Special character');
+            
+            let strengthText = '';
+            let strengthClass = '';
+            
+            if (strength <= 1) {
+                strengthText = 'Weak';
+                strengthClass = 'text-danger';
+            } else if (strength <= 3) {
+                strengthText = 'Medium';
+                strengthClass = 'text-warning';
+            } else {
+                strengthText = 'Strong';
+                strengthClass = 'text-success';
+            }
+            
+            strengthIndicator.innerHTML = `
+                <small class="${strengthClass}">
+                    Password strength: ${strengthText}
+                    ${feedback.length > 0 ? '<br>Suggestions: ' + feedback.join(', ') : ''}
+                </small>
+            `;
+        });
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const firstName = document.getElementById('first_name').value.trim();
+    const lastName = document.getElementById('last_name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+    
+    if (!firstName || !lastName) {
+        e.preventDefault();
+        alert('Please enter both first and last name.');
+        return false;
+    }
+    
+    if (!email) {
+        e.preventDefault();
+        alert('Please enter an email address.');
+        return false;
+    }
+    
+    if (!username) {
+        e.preventDefault();
+        alert('Please enter a username.');
+        return false;
+    }
+    
+    if (password.length < 6) {
+        e.preventDefault();
+        alert('Password must be at least 6 characters long.');
+        return false;
+    }
+    
+    if (!role) {
+        e.preventDefault();
+        alert('Please select a role for this staff member.');
+        return false;
+    }
+    
+    // Final confirmation for Administrator role
+    if (role === 'Administrator') {
+        if (!confirm('Final confirmation: Create Administrator account for ' + firstName + ' ' + lastName + '?')) {
+            e.preventDefault();
+            return false;
+        }
+    }
+});
+</script>
+
+<style>
+.role-info {
+    margin-bottom: 1.5rem;
+}
+
+.role-info h6 {
+    border-bottom: 1px solid var(--bs-gray-300);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.role-info ul {
+    margin-bottom: 0;
+}
+</style>
+{% endblock %}

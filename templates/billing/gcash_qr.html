@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}GCash QR Payment - INV-{{ "%04d"|format(bill.id) }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm mx-auto" style="max-width: 500px;">
+        <div class="card-header bg-success text-white text-center">
+            <h4 class="mb-0"><i class="fas fa-qrcode me-2"></i>GCash QR Payment</h4>
+        </div>
+        <div class="card-body text-center">
+            <p class="lead">Scan the QR code below to pay for Invoice <strong>INV-{{ "%04d"|format(bill.id) }}</strong>.</p>
+            <h2 class="display-4 text-success">₱{{ "{:,.2f}".format(bill.get_balance()) }}</h2>
+            <p class="text-muted">Amount Due</p>
+
+            <div class="my-4">
+                <!-- GCash QR Code -->
+                <img src="/static/images/gcash_qr.png" alt="GCash QR Code" class="img-fluid border rounded shadow-sm">
+            </div>
+
+            <!-- InstaPay QR Code -->
+            <div class="my-4">
+                <img src="/static/images/instapay_qr.png" alt="InstaPay QR Code" class="img-fluid border rounded shadow-sm">
+            </div>
+
+            <p class="mb-3">
+                <small class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Do not close this page until payment is confirmed.
+                </small>
+            </p>
+            
+            <form action="{{ url_for('confirm_payment', id=bill.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to confirm this payment as done?');">
+                <button type="submit" class="btn btn-success mt-3 me-2">
+                    <i class="fas fa-check-circle me-2"></i>Confirm Payment Done
+                </button>
+            </form>
+
+            <a href="{{ url_for('billing_view', id=bill.id) }}" class="btn btn-outline-secondary mt-3">
+                <i class="fas fa-arrow-left me-2"></i>Back to Invoice
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

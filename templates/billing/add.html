@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Bill - Dental Practice Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="fas fa-file-invoice-dollar me-2"></i>
+                    Create New Bill
+                </h1>
+                <a href="{{ url_for('billing_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Billing
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" id="billForm">
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Patient and Bill Information -->
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            Patient & Bill Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.patient_id.label(class="form-label") }}
+                            {{ form.patient_id(class="form-select" + (" is-invalid" if form.patient_id.errors else "")) }}
+                            {% if form.patient_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.patient_id.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3" id="dueDateGroup">
+                            {{ form.due_date.label(class="form-label") }}
+                            {{ form.due_date(class="form-control" + (" is-invalid" if form.due_date.errors else "")) }}
+                            {% if form.due_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.due_date.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.payment_method.label(class="form-label") }}
+                            {{ form.payment_method(class="form-select", id="paymentMethodSelect") }}
+                            <div class="form-text">Optional: Expected payment method</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="3", placeholder="Additional notes or payment terms...") }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bill Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calculator me-2"></i>
+                            Bill Summary
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">₱0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total:</strong>
+                            <strong id="total">₱0.00</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bill Items -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Bill Items
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="addBillItem()">
+                            <i class="fas fa-plus me-1"></i>
+                            Add Item
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Item/Service</th>
+                                        <th style="width: 20%;">Quantity</th>
+                                        <th style="width: 20%;">Unit Price</th>
+                                        <th style="width: 5%;">Total</th>
+                                        <th style="width: 5%;"></th> <!-- For delete button -->
+                                    </tr>
+                                </thead>
+                                <tbody id="billItemsTableBody">
+                            <!-- Bill items will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="text-center mt-3" id="emptyItemsMessage">
+                            <p class="text-muted">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Click "Add Item" to start building your bill
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Add Templates -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            Quick Add Templates
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Dental Cleaning', 1, 2500)">
+                                    <i class="fas fa-tooth me-1"></i>
+                                    Cleaning - ₱2,500
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Dental Filling', 1, 3500)">
+                                    <i class="fas fa-tooth me-1"></i>
+                                    Filling - ₱3,500
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Root Canal Treatment', 1, 15000)">
+                                    <i class="fas fa-tooth me-1"></i>
+                                    Root Canal - ₱15,000
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Tooth Extraction', 1, 5000)">
+                                    <i class="fas fa-tooth me-1"></i>
+                                    Extraction - ₱5,000
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Consultation Fee', 1, 1000)">
+                                    <i class="fas fa-stethoscope me-1"></i>
+                                    Consultation - ₱1,000
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('X-Ray', 1, 800)">
+                                    <i class="fas fa-x-ray me-1"></i>
+                                    X-Ray - ₱800
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Buttons -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">
+                        <i class="fas fa-times me-2"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                        <i class="fas fa-save me-2"></i>
+                        Create Bill
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hidden field for item count -->
+        <input type="hidden" id="item_count" name="item_count" value="0">
+    </form>
+</div>
+
+<!-- GCash QR Code Modal -->
+<div class="modal fade" id="gcashQrModal" tabindex="-1" aria-labelledby="gcashQrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gcashQrModalLabel">Scan to Pay via GCash</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Please scan the QR code below to complete your payment.</p>
+                <img src="/static/images/gcash_qr_placeholder.png" alt="GCash QR Code" class="img-fluid mb-3" style="max-width: 250px;">
+                <p><strong>Amount: <span id="qrPaymentAmount">₱0.00</span></strong></p>
+                <p class="text-muted">Once payment is confirmed, click 'Proceed'.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="proceedGcashPaymentBtn">Proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let itemCount = 0;
+
+function addBillItem(description = '', quantity = 1, unitPrice = 0) {
+    const billItemsTableBody = document.getElementById('billItemsTableBody');
+    const emptyItemsMessage = document.getElementById('emptyItemsMessage');
+
+    if (emptyItemsMessage) {
+        emptyItemsMessage.style.display = 'none';
+    }
+
+    const newRow = document.createElement('tr');
+    newRow.id = `bill-item-${itemCount}`;
+    newRow.className = 'bill-item';
+    
+    const total = quantity * unitPrice; // Explicitly calculate item total
+    newRow.innerHTML = `
+        <td style="width: 50%;">
+            <input type="text" class="form-control form-control-sm item-description" 
+                   name="items[${itemCount}][description]" 
+                   placeholder="Service or item description" value="${description}" required>
+        </td>
+        <td style="width: 20%;">
+            <input type="number" class="form-control form-control-sm item-quantity" 
+                   name="items[${itemCount}][quantity]" value="${quantity}" min="1" required>
+        </td>
+        <td style="width: 20%;">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">₱</span>
+                <input type="number" class="form-control form-control-sm item-unit-price" 
+                       name="items[${itemCount}][unit_price]" value="${unitPrice}" min="0" step="0.01" required>
+            </div>
+        </td>
+        <td style="width: 5%;">
+            <span class="item-total">₱${total.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <input type="hidden" class="item-total-value" name="items[${itemCount}][total_price]" value="${total}">
+        </td>
+        <td style="width: 5%;">
+            <button type="button" class="btn btn-sm btn-danger remove-item" onclick="removeBillItem(${itemCount})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    billItemsTableBody.appendChild(newRow);
+
+    // Add event listeners for new inputs
+    const quantityInput = newRow.querySelector(`.item-quantity`);
+    const unitPriceInput = newRow.querySelector(`.item-unit-price`);
+    const descriptionInput = newRow.querySelector(`.item-description`);
+
+    quantityInput.addEventListener('input', updateItemTotal);
+    unitPriceInput.addEventListener('input', updateItemTotal);
+    descriptionInput.addEventListener('input', validateForm);
+
+    updateItemTotal.call(quantityInput); // Recalculate total for new item
+    itemCount++;
+    document.getElementById('item_count').value = itemCount;
+    validateForm();
+}
+
+function removeBillItem(id) {
+    const itemToRemove = document.getElementById(`bill-item-${id}`);
+    if (itemToRemove) {
+        itemToRemove.remove();
+        calculateGrandTotal();
+        validateForm();
+        
+        const billItemsTableBody = document.getElementById('billItemsTableBody');
+        if (billItemsTableBody.children.length === 0) {
+            document.getElementById('emptyItemsMessage').style.display = 'block';
+        }
+    }
+}
+
+function updateItemTotal(event) {
+    const row = this.closest('.bill-item');
+    const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+    const unitPrice = parseFloat(row.querySelector('.item-unit-price').value) || 0;
+    const total = quantity * unitPrice;
+    
+    row.querySelector('.item-total').textContent = `₱${total.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    row.querySelector('.item-total-value').value = total.toFixed(2);
+    
+    calculateGrandTotal();
+    validateForm();
+}
+
+function calculateGrandTotal() {
+    let subtotal = 0;
+    document.querySelectorAll('.item-total-value').forEach(input => {
+        subtotal += parseFloat(input.value) || 0;
+    });
+    
+    document.getElementById('subtotal').textContent = `₱${subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById('total').textContent = `₱${subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+}
+
+function validateForm() {
+    let allItemsValid = true;
+    let hasItems = false;
+
+    document.querySelectorAll('.bill-item').forEach(row => {
+        hasItems = true;
+        const description = row.querySelector('.item-description').value.trim();
+        const quantity = parseFloat(row.querySelector('.item-quantity').value);
+        const unitPrice = parseFloat(row.querySelector('.item-unit-price').value);
+
+        if (description === '' || isNaN(quantity) || quantity <= 0 || isNaN(unitPrice) || unitPrice < 0) {
+            allItemsValid = false;
+        }
+    });
+
+    const submitBtn = document.getElementById('submitBtn');
+    if (hasItems && allItemsValid) {
+        submitBtn.removeAttribute('disabled');
+    } else {
+        submitBtn.setAttribute('disabled', 'disabled');
+    }
+}
+
+function toggleDueDateVisibility() {
+    const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+    const dueDateGroup = document.getElementById('dueDateGroup');
+    if (paymentMethodSelect && dueDateGroup) {
+        if (paymentMethodSelect.value === 'BDO Bank Transfer' || paymentMethodSelect.value === 'GCash') {
+            dueDateGroup.style.display = 'none';
+        } else {
+            dueDateGroup.style.display = 'block';
+        }
+    }
+}
+
+function clearForm() {
+    // Clear patient selection
+    const patientSelect = document.getElementById('patient_id');
+    if (patientSelect) {
+        patientSelect.selectedIndex = 0;
+    }
+
+    // Reset due date
+    const dueDateInput = document.getElementById('due_date');
+    if (dueDateInput) {
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 30);
+        dueDateInput.value = futureDate.toISOString().split('T')[0];
+    }
+
+    // Reset payment method
+    const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+    if (paymentMethodSelect) {
+        paymentMethodSelect.selectedIndex = 0; // Select the first option (Cash)
+        toggleDueDateVisibility();
+    }
+
+    // Clear notes
+    const notesInput = document.getElementById('notes');
+    if (notesInput) {
+        notesInput.value = '';
+    }
+
+    // Remove all bill items
+    const billItemsTableBody = document.getElementById('billItemsTableBody');
+    while (billItemsTableBody.firstChild) {
+        billItemsTableBody.removeChild(billItemsTableBody.firstChild);
+    }
+    itemCount = 0;
+    document.getElementById('item_count').value = 0;
+    document.getElementById('emptyItemsMessage').style.display = 'block';
+
+    // Recalculate total
+    calculateGrandTotal();
+
+    // Disable submit button
+    validateForm();
+
+    flash('Form has been reset.', 'info');
+}
+
+// Helper to show temporary flash messages
+function flash(message, category) {
+    const flashContainer = document.querySelector('.flash-messages'); // Assuming you have a div with this class to display flashes
+    if (flashContainer) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${category} alert-dismissible fade show`;
+        alertDiv.setAttribute('role', 'alert');
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        flashContainer.appendChild(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            alertDiv.classList.add('fade');
+            alertDiv.addEventListener('transitionend', () => alertDiv.remove());
+        }, 5000);
+    }
+}
+
+function addQuickItem(description, quantity, unitPrice) {
+    addBillItem(description, quantity, unitPrice);
+}
+
+// Initial call to set visibility on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default due date (30 days from today)
+    const dueDateInput = document.getElementById('due_date');
+    if (dueDateInput && !dueDateInput.value) {
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 30);
+        dueDateInput.value = futureDate.toISOString().split('T')[0];
+    }
+    
+    // Add initial item
+    addBillItem();
+
+    // Listen for changes on payment method to trigger recalculation if needed
+    const paymentMethodInput = document.getElementById('paymentMethodSelect');
+    if (paymentMethodInput) {
+        paymentMethodInput.addEventListener('change', calculateGrandTotal);
+        paymentMethodInput.addEventListener('change', toggleDueDateVisibility);
+    }
+
+    // Initial call to set visibility on page load
+    toggleDueDateVisibility();
+
+    // Add event listener for the Cancel button
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', clearForm);
+    }
+
+});
+</script>
+{% endblock %}

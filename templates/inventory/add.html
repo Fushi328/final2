@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Add Inventory Item - Dental Practice Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="fas fa-box-open me-2"></i>
+                    Add New Inventory Item
+                </h1>
+                <a href="{{ url_for('inventory_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Inventory
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Basic Information -->
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Basic Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.category.label(class="form-label") }}
+                            {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.category.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows="4", placeholder="Detailed description of the item, specifications, usage notes...") }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stock and Pricing -->
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-warehouse me-2"></i>
+                            Stock & Pricing Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.current_stock.label(class="form-label") }}
+                                {{ form.current_stock(class="form-control" + (" is-invalid" if form.current_stock.errors else "")) }}
+                                {% if form.current_stock.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.current_stock.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.minimum_stock.label(class="form-label") }}
+                                {{ form.minimum_stock(class="form-control" + (" is-invalid" if form.minimum_stock.errors else "")) }}
+                                {% if form.minimum_stock.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.minimum_stock.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Alert when stock falls below this level</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.unit_cost.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">₱</span>
+                                {{ form.unit_cost(class="form-control" + (" is-invalid" if form.unit_cost.errors else "")) }}
+                                {% if form.unit_cost.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.unit_cost.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-text">Cost per unit (optional)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.supplier.label(class="form-label") }}
+                            {{ form.supplier(class="form-control", list="supplierList") }}
+                            <datalist id="supplierList">
+                                <option value="Medical Supplies Inc.">
+                                <option value="Dental Equipment Co.">
+                                <option value="Healthcare Materials Ltd.">
+                                <option value="Professional Dental Supply">
+                                <option value="Metro Medical Distributors">
+                                <option value="Dental Instruments Philippines">
+                            </datalist>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.last_restocked.label(class="form-label") }}
+                            {{ form.last_restocked(class="form-control" + (" is-invalid" if form.last_restocked.errors else "")) }}
+                            {% if form.last_restocked.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.last_restocked.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Leave blank if this is the initial stock</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Add Templates -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            Quick Add Templates
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Click on a template to auto-fill common dental supplies:</p>
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="fillTemplate('Dental Gloves', 'Supplies', 'Disposable latex gloves for examinations', 500, 50, 2.50)">
+                                    <i class="fas fa-hand-paper me-1"></i>
+                                    Dental Gloves
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="fillTemplate('Disposable Masks', 'Supplies', 'Surgical masks for infection control', 200, 25, 1.25)">
+                                    <i class="fas fa-head-side-mask me-1"></i>
+                                    Disposable Masks
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="fillTemplate('Dental Mirror', 'Instruments', 'Stainless steel dental examination mirror', 10, 2, 150.00)">
+                                    <i class="fas fa-search me-1"></i>
+                                    Dental Mirror
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="fillTemplate('Local Anesthetic', 'Medications', 'Lidocaine 2% with epinephrine', 20, 5, 85.00)">
+                                    <i class="fas fa-syringe me-1"></i>
+                                    Local Anesthetic
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="fillTemplate('Composite Filling', 'Materials', 'Light-cure composite resin filling material', 15, 3, 320.00)">
+                                    <i class="fas fa-tooth me-1"></i>
+                                    Composite Filling
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="fillTemplate('Dental Bur Set', 'Instruments', 'High-speed carbide bur set for drilling', 25, 5, 45.00)">
+                                    <i class="fas fa-cog me-1"></i>
+                                    Dental Bur Set
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="fillTemplate('Impression Material', 'Materials', 'Alginate impression material for molds', 12, 2, 180.00)">
+                                    <i class="fas fa-stamp me-1"></i>
+                                    Impression Material
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="fillTemplate('X-Ray Film', 'Supplies', 'Intraoral X-ray film packets', 100, 20, 12.50)">
+                                    <i class="fas fa-x-ray me-1"></i>
+                                    X-Ray Film
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stock Value Preview -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-calculator me-2"></i>
+                            Stock Value Preview
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Current Stock:</strong>
+                                <span id="stockPreview">0</span> units
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Unit Cost:</strong>
+                                ₱<span id="costPreview">0.00</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Total Value:</strong>
+                                ₱<span id="totalPreview">0.00</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Status:</strong>
+                                <span id="statusPreview" class="badge bg-secondary">Unknown</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Buttons -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('inventory_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>
+                        Add Inventory Item
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update preview when values change
+    const stockInput = document.getElementById('current_stock');
+    const costInput = document.getElementById('unit_cost');
+    const minStockInput = document.getElementById('minimum_stock');
+    
+    function updatePreview() {
+        const stock = parseInt(stockInput.value) || 0;
+        const cost = parseFloat(costInput.value) || 0;
+        const minStock = parseInt(minStockInput.value) || 0;
+        const total = stock * cost;
+        
+        document.getElementById('stockPreview').textContent = stock;
+        document.getElementById('costPreview').textContent = cost.toFixed(2);
+        document.getElementById('totalPreview').textContent = total.toFixed(2);
+        
+        // Update status badge
+        const statusSpan = document.getElementById('statusPreview');
+        if (stock <= 0) {
+            statusSpan.textContent = 'Out of Stock';
+            statusSpan.className = 'badge bg-danger';
+        } else if (stock <= minStock) {
+            statusSpan.textContent = 'Low Stock';
+            statusSpan.className = 'badge bg-warning';
+        } else {
+            statusSpan.textContent = 'In Stock';
+            statusSpan.className = 'badge bg-success';
+        }
+    }
+    
+    if (stockInput) stockInput.addEventListener('input', updatePreview);
+    if (costInput) costInput.addEventListener('input', updatePreview);
+    if (minStockInput) minStockInput.addEventListener('input', updatePreview);
+    
+    // Initial preview update
+    updatePreview();
+});
+
+function fillTemplate(name, category, description, currentStock, minStock, unitCost) {
+    document.getElementById('name').value = name;
+    document.getElementById('category').value = category;
+    document.getElementById('description').value = description;
+    document.getElementById('current_stock').value = currentStock;
+    document.getElementById('minimum_stock').value = minStock;
+    document.getElementById('unit_cost').value = unitCost.toFixed(2);
+    
+    // Update preview
+    const event = new Event('input');
+    document.getElementById('current_stock').dispatchEvent(event);
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const name = document.getElementById('name').value.trim();
+    const category = document.getElementById('category').value;
+    const currentStock = parseInt(document.getElementById('current_stock').value);
+    const minStock = parseInt(document.getElementById('minimum_stock').value);
+    
+    if (!name) {
+        e.preventDefault();
+        alert('Please enter an item name.');
+        return false;
+    }
+    
+    if (!category) {
+        e.preventDefault();
+        alert('Please select a category.');
+        return false;
+    }
+    
+    if (currentStock < 0) {
+        e.preventDefault();
+        alert('Current stock cannot be negative.');
+        return false;
+    }
+    
+    if (minStock < 0) {
+        e.preventDefault();
+        alert('Minimum stock cannot be negative.');
+        return false;
+    }
+    
+    if (currentStock <= minStock && currentStock > 0) {
+        if (!confirm('Current stock is at or below the minimum level. Do you want to continue?')) {
+            e.preventDefault();
+            return false;
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Management - Dental Practice Management System{% endblock %}
+
+{% block content %}
+{% set excluded_roles = ["Administrator", "Dentist"] %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="fas fa-user-md me-2"></i>
+                    Staff Management
+                </h1>
+                <a href="{{ url_for('staff_add') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Add New Staff Member
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Total Staff</h5>
+                            <h3>{{ staff_members|length }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Active Staff</h5>
+                            <h3>{{ staff_members|selectattr("is_active")|list|length }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Dentists</h5>
+                            <h3>{{ staff_members|selectattr("role", "equalto", "Dentist")|list|length }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-md fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Support Staff</h5>
+                            <h3>{{ staff_members|rejectattr("role", "equalto", "Administrator")|rejectattr("role", "equalto", "Dentist")|list|length }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-friends fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Staff Directory
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if staff_members %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Staff ID</th>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Status</th>
+                                        <th>Member Since</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for staff in staff_members %}
+                                    <tr class="{% if not staff.is_active %}table-secondary{% endif %}">
+                                        <td>
+                                            <code>S{{ "%04d"|format(staff.id) }}</code>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle me-3">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                <div>
+                                                    <strong>{{ staff.get_full_name() }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ staff.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if staff.role == 'Administrator' %}danger{% elif staff.role == 'Dentist' %}primary{% elif staff.role == 'Hygienist' %}info{% elif staff.role == 'Assistant' %}success{% else %}secondary{% endif %}">
+                                                {{ staff.role }}
+                                            </span>
+                                        </td>
+                                        <td>{{ staff.email }}</td>
+                                        <td>{{ staff.phone or '-' }}</td>
+                                        <td>
+                                            {% if staff.is_active %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>
+                                                    Active
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-pause me-1"></i>
+                                                    Inactive
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ staff.created_at.strftime('%m/%d/%Y') }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-info" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#staffModal{{ staff.id }}"
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if staff.id != current_user.id %}
+                                                <button type="button" class="btn btn-outline-warning" 
+                                                        onclick="toggleStaffStatus({{ staff.id }}, {{ staff.is_active|lower }})"
+                                                        title="{% if staff.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                                    <i class="fas fa-{% if staff.is_active %}pause{% else %}play{% endif %}"></i>
+                                                </button>
+                                                {% endif %}
+                                                <button type="button" class="btn btn-outline-primary" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#scheduleModal{{ staff.id }}"
+                                                        title="View Schedule">
+                                                    <i class="fas fa-calendar"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No staff members found</h5>
+                            <p class="text-muted">Start by adding your first staff member.</p>
+                            <a href="{{ url_for('staff_add') }}" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Add First Staff Member
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Staff Details Modals -->
+{% for staff in staff_members %}
+<div class="modal fade" id="staffModal{{ staff.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user me-2"></i>
+                    Staff Details - {{ staff.get_full_name() }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Staff ID:</dt>
+                            <dd class="col-sm-8">S{{ "%04d"|format(staff.id) }}</dd>
+                            
+                            <dt class="col-sm-4">Full Name:</dt>
+                            <dd class="col-sm-8">{{ staff.get_full_name() }}</dd>
+                            
+                            <dt class="col-sm-4">Username:</dt>
+                            <dd class="col-sm-8">{{ staff.username }}</dd>
+                            
+                            <dt class="col-sm-4">Role:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-{% if staff.role == 'Administrator' %}danger{% elif staff.role == 'Dentist' %}primary{% elif staff.role == 'Hygienist' %}info{% elif staff.role == 'Assistant' %}success{% else %}secondary{% endif %}">
+                                    {{ staff.role }}
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Email:</dt>
+                            <dd class="col-sm-8">{{ staff.email }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Phone:</dt>
+                            <dd class="col-sm-8">{{ staff.phone or 'Not provided' }}</dd>
+                            
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                {% if staff.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </dd>
+                            
+                            <dt class="col-sm-4">Member Since:</dt>
+                            <dd class="col-sm-8">{{ staff.created_at.strftime('%B %d, %Y') }}</dd>
+                            
+                            <dt class="col-sm-4">Appointments:</dt>
+                            <dd class="col-sm-8">
+                                <strong>{{ staff.appointments|length }}</strong> scheduled
+                            </dd>
+                            
+                            <dt class="col-sm-4">Treatments:</dt>
+                            <dd class="col-sm-8">
+                                <strong>{{ staff.treatments|length }}</strong> recorded
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <hr>
+                <h6>Recent Activity</h6>
+                {% if staff.appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Patient</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in (staff.appointments|sort(attribute='appointment_date', reverse=true))[:5] %}
+                                <tr>
+                                    <td>{{ appointment.appointment_date.strftime('%m/%d/%Y') }}</td>
+                                    <td>{{ appointment.patient.get_full_name() }}</td>
+                                    <td>{{ appointment.appointment_type }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if appointment.status == 'Completed' %}success{% elif appointment.status == 'Scheduled' %}primary{% else %}secondary{% endif %} badge-sm">
+                                            {{ appointment.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No recent appointments</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if staff.id != current_user.id %}
+                <button type="button" class="btn btn-{% if staff.is_active %}warning{% else %}success{% endif %}" 
+                        onclick="toggleStaffStatus({{ staff.id }}, {{ staff.is_active|lower }})">
+                    <i class="fas fa-{% if staff.is_active %}pause{% else %}play{% endif %} me-2"></i>
+                    {% if staff.is_active %}Deactivate{% else %}Activate{% endif %}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Modal -->
+<div class="modal fade" id="scheduleModal{{ staff.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar me-2"></i>
+                    Schedule - {{ staff.get_full_name() }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Upcoming Appointments</h6>
+                {% set upcoming_appointments = staff.appointments|selectattr("appointment_date", ">=", today)|sort(attribute="appointment_date") %}
+                {% if upcoming_appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Type</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in upcoming_appointments[:10] %}
+                                <tr>
+                                    <td>{{ appointment.appointment_date.strftime('%m/%d/%Y') }}</td>
+                                    <td>{{ appointment.appointment_time.strftime('%I:%M %p') }}</td>
+                                    <td>{{ appointment.patient.get_full_name() }}</td>
+                                    <td>{{ appointment.appointment_type }}</td>
+                                    <td>{{ appointment.duration }} min</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No upcoming appointments scheduled</p>
+                {% endif %}
+                
+                <hr>
+                
+                <h6>Weekly Summary</h6>
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h4 class="text-primary">{{ staff.appointments|selectattr("appointment_date", ">=", week_start)|list|length }}</h4>
+                        <small class="text-muted">This Week</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h4 class="text-success">{{ staff.appointments|selectattr("status", "equalto", "Completed")|list|length }}</h4>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h4 class="text-info">{{ staff.treatments|length }}</h4>
+                        <small class="text-muted">Treatments</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('appointments_add') }}?staff_id={{ staff.id }}" class="btn btn-primary">
+                    <i class="fas fa-calendar-plus me-2"></i>
+                    Schedule Appointment
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function toggleStaffStatus(staffId, currentStatus) {
+    const action = currentStatus ? 'deactivate' : 'activate';
+    const confirmMessage = `Are you sure you want to ${action} this staff member?`;
+    
+    if (confirm(confirmMessage)) {
+        // In a real application, this would make an AJAX call
+        alert(`Staff member ${action}d successfully!`);
+        location.reload();
+    }
+}
+</script>
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--bs-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.badge-sm {
+    font-size: 0.7rem;
+}
+</style>
+{% endblock %}

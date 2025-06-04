@@ -1,0 +1,153 @@
+/* Billing Table Accessibility & Contrast Improvements */
+
+/* Paid (Success) Row */
+.table-success {
+    background-color: #173c22 !important; /* Darker green */
+    color: #ffffff !important;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    border-left: 4px solid #4CAF50;
+}
+
+/* Pending (Warning) Row */
+.table-warning {
+    background-color: #66521b !important; /* Darker gold */
+    color: #fffbe7 !important;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    border-left: 4px solid #ffb300;
+}
+
+/* Overdue (Danger) Row */
+.table-danger {
+    background-color: #5a1818 !important; /* Darker red */
+    color: #fff5f5 !important;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    border-left: 4px solid #FF5252;
+}
+
+/* Table header for billing */
+.table thead th {
+    background-color: #10131a !important;
+    color: #fff !important;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    text-shadow: 0 2px 4px #000;
+    border-bottom: 2px solid #4CAF50;
+}
+
+/* Table body cell for billing */
+.table tbody td {
+    color: #f7fafd !important;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+/* Patient name and phone: more readable */
+.table tbody td a,
+.table tbody td small {
+    color: #e0e7ef !important;
+    font-weight: 600;
+}
+.table tbody td small {
+    color: #b0bac9 !important;
+}
+
+/* Amounts: emphasize important values */
+.table tbody td strong,
+.table tbody td .text-danger,
+.table tbody td .text-success {
+    color: #fff !important;
+    font-weight: 900;
+}
+
+.table tbody td .text-danger {
+    color: #ff5252 !important;
+    font-weight: 900;
+}
+.table tbody td .text-success {
+    color: #4CAF50 !important;
+    font-weight: 900;
+}
+
+/* Status badges */
+.badge-success {
+    background: #059669 !important;
+    color: #fff !important;
+    font-weight: 800;
+    border: 1px solid #4CAF50;
+    text-shadow: 0 1px 2px #181d27;
+}
+.badge-warning {
+    background: #b45309 !important;
+    color: #fffbe7 !important;
+    font-weight: 800;
+    border: 1px solid #ffb300;
+    text-shadow: 0 1px 2px #181d27;
+}
+.badge-danger {
+    background: #dc2626 !important;
+    color: #fff2f2 !important;
+    font-weight: 800;
+    border: 1px solid #FF5252;
+    text-shadow: 0 1px 2px #181d27;
+}
+
+/* Action button alignment and contrast */
+.table td {
+    vertical-align: middle !important;
+}
+.table .btn-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem; /* Increased for clarity */
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.table .btn-group .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.6rem; /* Uniform padding */
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    background: #232b3a !important;
+    color: #fff !important;
+    border: 2px solid #4CAF50 !important;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.table .btn-group .btn:hover, .table .btn-group .btn:focus {
+    background: #4CAF50 !important;
+    color: #fff !important;
+    border: 2px solid #232b3a !important;
+}
+
+.table .btn-group .btn i {
+    margin: 0;
+    font-size: 1.2em; /* Ensures icon size is consistent */
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+}
+.table .btn, .table .btn:focus {
+    background: #232b3a !important;
+    color: #fff !important;
+    border: 1px solid #4c8cff !important;
+    box-shadow: 0 1px 3px #0006;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.table .btn:hover {
+    background: #2563eb !important;
+    color: #fff !important;
+}

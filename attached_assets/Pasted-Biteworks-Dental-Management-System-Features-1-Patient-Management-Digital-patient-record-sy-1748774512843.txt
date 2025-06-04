@@ -1,0 +1,123 @@
+Biteworks Dental Management System – Features
+
+1. Patient Management
+
+•Digital patient record system to replace paper-based records
+
+•Patient registration form capturing:
+
+	•Contact information (name, address, phone, email)
+
+	•Demographic information (date of birth, gender)
+
+	•Brief medical and dental history
+
+•Treatment history tracking including:
+
+	•Dental charting per patient
+
+	•Examination notes
+
+	•Relevant medical observations
+
+•Secure data storage with compliance to patient privacy laws
+
+
+2. Appointment Scheduling
+
+•Digital appointment calendar
+
+•Configurable time slots for different appointment types:
+
+	•Short (e.g., check-ups, prophylaxis)
+
+	•Medium (e.g., fillings, simple procedures)
+
+	•Long (e.g., root canals, extractions, braces)
+
+•Manual appointment entry (no online booking functionality)
+
+•Appointment rescheduling and cancellation management
+
+•Daily appointment report generation
+
+
+3. Billing and Payments
+
+•Support for multiple payment methods:
+
+	•Cash
+
+	•BDO bank transfers
+
+•Invoice and receipt generation with:
+
+	•Date of service
+
+	•Description of services
+
+	•Total amount due
+
+•Optional automated billing and payment reminders
+
+
+4. Treatment Management
+
+Digital recording of all treatments and procedures
+
+Support for standard treatment plans with individual customization
+
+Ability to add notes for each visit
+
+
+5. Inventory and Supplies
+
+•Simple inventory management system
+
+•Manual stock level tracking (visual checks)
+
+•Manual supply reordering support
+
+
+6. Staff Management
+
+•Basic staff scheduling using a shared calendar
+
+•No shift or attendance tracking required (for now)
+
+•Unified access (no role-based permissions currently)
+
+•Scalable architecture to support roles/permissions in future
+
+
+7. Reporting and Analytics
+
+•Daily appointment reports
+
+•Monthly summary reports of patient visits
+
+•Dashboard with real-time analytics on:
+
+	•Appointment scheduling
+
+	•Patient volume
+
+	•Resource allocation
+
+8. Communication
+
+•Automated SMS reminders for appointments
+
+•Follow-up notifications via SMS or email
+
+•Integration with SMS/email APIs for streamlined messaging
+
+9. Compliance and Security
+
+•Full compliance with relevant data privacy and security laws
+
+•Secure, encrypted data storage
+
+•Regular data backups (manual or automated)
+
+•Controlled access to sensitive patient information

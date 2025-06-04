@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule New Appointment - Dental Practice Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="fas fa-calendar-plus me-2"></i>
+                    Schedule New Appointment
+                </h1>
+                <a href="{{ url_for('appointments_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Appointments
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" id="appointmentForm">
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Patient and Staff Selection -->
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users me-2"></i>
+                            Patient & Staff Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.patient_id.label(class="form-label") }}
+                            {{ form.patient_id(class="form-select" + (" is-invalid" if form.patient_id.errors else "")) }}
+                            {% if form.patient_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.patient_id.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <a href="{{ url_for('patients_add') }}" target="_blank">
+                                    <i class="fas fa-plus me-1"></i>
+                                    Add new patient
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.staff_id.label(class="form-label") }}
+                            {{ form.staff_id(class="form-select" + (" is-invalid" if form.staff_id.errors else "")) }}
+                            {% if form.staff_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.staff_id.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.appointment_type.label(class="form-label") }}
+                            {{ form.appointment_type(class="form-select" + (" is-invalid" if form.appointment_type.errors else "")) }}
+                            {% if form.appointment_type.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.appointment_type.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Date and Time -->
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clock me-2"></i>
+                            Date & Time Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.appointment_date.label(class="form-label") }}
+                                {{ form.appointment_date(class="form-control" + (" is-invalid" if form.appointment_date.errors else "")) }}
+                                {% if form.appointment_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.appointment_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.appointment_time.label(class="form-label") }}
+                                {{ form.appointment_time(class="form-control" + (" is-invalid" if form.appointment_time.errors else "")) }}
+                                {% if form.appointment_time.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.appointment_time.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.duration.label(class="form-label") }}
+                            {{ form.duration(class="form-select" + (" is-invalid" if form.duration.errors else "")) }}
+                            {% if form.duration.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.duration.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Duration will determine appointment slot length</div>
+                        </div>
+                        
+                        <!-- Conflict Warning -->
+                        <div id="conflictWarning" class="alert alert-warning d-none">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Scheduling Conflict!</strong> There is already an appointment scheduled for this doctor at this time.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-sticky-note me-2"></i>
+                            Additional Notes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="4", placeholder="Any special instructions, patient concerns, or preparation notes...") }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Buttons -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('appointments_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        Schedule Appointment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('appointment_date');
+    const timeInput = document.getElementById('appointment_time');
+    const staffSelect = document.getElementById('staff_id');
+    const durationSelect = document.getElementById('duration');
+    const conflictWarning = document.getElementById('conflictWarning');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Set minimum date to today
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+        
+        // Set default date to today if empty
+        if (!dateInput.value) {
+            dateInput.value = today;
+        }
+    }
+    
+    // Check for conflicts when date, time, staff, or duration changes
+    function checkConflicts() {
+        if (dateInput.value && timeInput.value && staffSelect.value && durationSelect.value) {
+            // Here you would typically make an AJAX call to check for conflicts
+            // For now, we'll just show how the UI would work
+            
+            // Simulate conflict check
+            const params = new URLSearchParams({
+                date: dateInput.value,
+                time: timeInput.value,
+                staff_id: staffSelect.value,
+                duration: durationSelect.value
+            });
+            
+            fetch(`/api/appointments/check?${params}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.has_conflict) {
+                        conflictWarning.classList.remove('d-none');
+                        submitBtn.classList.add('btn-warning');
+                        submitBtn.classList.remove('btn-primary');
+                    } else {
+                        conflictWarning.classList.add('d-none');
+                        submitBtn.classList.add('btn-primary');
+                        submitBtn.classList.remove('btn-warning');
+                    }
+                })
+                .catch(error => {
+                    console.log('Error checking conflicts:', error);
+                });
+        }
+    }
+    
+    // Add event listeners
+    if (dateInput) dateInput.addEventListener('change', checkConflicts);
+    if (timeInput) timeInput.addEventListener('change', checkConflicts);
+    if (staffSelect) staffSelect.addEventListener('change', checkConflicts);
+    if (durationSelect) durationSelect.addEventListener('change', checkConflicts);
+    
+    // Form validation
+    document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+        if (!dateInput.value || !timeInput.value || !staffSelect.value) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            return false;
+        }
+        
+        // Check if appointment is in the past
+        const appointmentDateTime = new Date(dateInput.value + 'T' + timeInput.value);
+        const now = new Date();
+        
+        if (appointmentDateTime <= now) {
+            e.preventDefault();
+            alert('Cannot schedule appointments in the past.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

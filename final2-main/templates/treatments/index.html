@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Treatments - Dental Practice Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="fas fa-medical-kit me-2"></i>
+                    Treatment Records
+                </h1>
+                <a href="{{ url_for('treatments_add') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Add Treatment Record
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" 
+                       placeholder="Search by patient name or procedure..." 
+                       value="{{ search }}">
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#statsModal">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Statistics
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Treatments Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Treatment History ({{ treatments|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if treatments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Treatment ID</th>
+                                        <th>Date</th>
+                                        <th>Patient</th>
+                                        <th>Procedure</th>
+                                        <th>Tooth</th>
+                                        <th>Doctor</th>
+                                        <th>Cost</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for treatment in treatments %}
+                                    <tr>
+                                        <td>
+                                            <code>T{{ "%04d"|format(treatment.id) }}</code>
+                                        </td>
+                                        <td>{{ treatment.treatment_date.strftime('%m/%d/%Y') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('patients_view', id=treatment.patient.id) }}" class="text-decoration-none">
+                                                {{ treatment.patient.get_full_name() }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <strong>{{ treatment.procedure_name }}</strong>
+                                            {% if treatment.diagnosis %}
+                                                <br>
+                                                <small class="text-muted">{{ treatment.diagnosis[:50] }}{% if treatment.diagnosis|length > 50 %}...{% endif %}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if treatment.tooth_number %}
+                                                <span class="badge bg-info">{{ treatment.tooth_number }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>Dr. {{ treatment.staff.get_full_name() }}</td>
+                                        <td>
+                                            <strong>₱{{ "{:,.2f}".format(treatment.cost) }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if treatment.status == 'Completed' %}success{% elif treatment.status == 'In Progress' %}warning{% else %}secondary{% endif %}">
+                                                {{ treatment.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-info" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#treatmentModal{{ treatment.id }}"
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if treatment.status != 'Completed' %}
+                                                <button type="button" class="btn btn-outline-success" 
+                                                        onclick="updateTreatmentStatus({{ treatment.id }}, 'Completed')"
+                                                        title="Mark Complete">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                {% endif %}
+                                                <a href="{{ url_for('billing_add') }}?treatment_id={{ treatment.id }}" 
+                                                   class="btn btn-outline-warning" title="Create Bill">
+                                                    <i class="fas fa-file-invoice-dollar"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-notes-medical fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No treatment records found</h5>
+                            {% if search %}
+                                <p class="text-muted">No treatments match your search criteria.</p>
+                                <a href="{{ url_for('treatments_index') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>
+                                    Clear Search
+                                </a>
+                            {% else %}
+                                <p class="text-muted">Start by adding your first treatment record.</p>
+                                <a href="{{ url_for('treatments_add') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>
+                                    Add First Treatment
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Treatment Details Modals -->
+{% for treatment in treatments %}
+<div class="modal fade" id="treatmentModal{{ treatment.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-medical-kit me-2"></i>
+                    Treatment Details - T{{ "%04d"|format(treatment.id) }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Patient:</dt>
+                            <dd class="col-sm-7">{{ treatment.patient.get_full_name() }}</dd>
+                            
+                            <dt class="col-sm-5">Date:</dt>
+                            <dd class="col-sm-7">{{ treatment.treatment_date.strftime('%B %d, %Y') }}</dd>
+                            
+                            <dt class="col-sm-5">Procedure:</dt>
+                            <dd class="col-sm-7">{{ treatment.procedure_name }}</dd>
+                            
+                            <dt class="col-sm-5">Tooth Number:</dt>
+                            <dd class="col-sm-7">{{ treatment.tooth_number or 'Not specified' }}</dd>
+                            
+                            <dt class="col-sm-5">Cost:</dt>
+                            <dd class="col-sm-7"><strong>₱{{ "{:,.2f}".format(treatment.cost) }}</strong></dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Doctor:</dt>
+                            <dd class="col-sm-8">Dr. {{ treatment.staff.get_full_name() }}</dd>
+                            
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-{% if treatment.status == 'Completed' %}success{% elif treatment.status == 'In Progress' %}warning{% else %}secondary{% endif %}">
+                                    {{ treatment.status }}
+                                </span>
+                            </dd>
+                            
+                            {% if treatment.appointment %}
+                            <dt class="col-sm-4">Related Appointment:</dt>
+                            <dd class="col-sm-8">{{ treatment.appointment.appointment_date.strftime('%m/%d/%Y') }} - {{ treatment.appointment.appointment_type }}</dd>
+                            {% endif %}
+                            
+                            <dt class="col-sm-4">Created:</dt>
+                            <dd class="col-sm-8">{{ treatment.created_at.strftime('%m/%d/%Y %I:%M %p') }}</dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                {% if treatment.diagnosis %}
+                <hr>
+                <h6>Diagnosis:</h6>
+                <p>{{ treatment.diagnosis }}</p>
+                {% endif %}
+                
+                {% if treatment.treatment_notes %}
+                <hr>
+                <h6>Treatment Notes:</h6>
+                <p>{{ treatment.treatment_notes }}</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if treatment.status != 'Completed' %}
+                <button type="button" class="btn btn-success" onclick="updateTreatmentStatus({{ treatment.id }}, 'Completed')">
+                    <i class="fas fa-check me-2"></i>
+                    Mark Complete
+                </button>
+                {% endif %}
+                <a href="{{ url_for('billing_add') }}?treatment_id={{ treatment.id }}" class="btn btn-warning">
+                    <i class="fas fa-file-invoice-dollar me-2"></i>
+                    Create Bill
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Statistics Modal -->
+<div class="modal fade" id="statsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Treatment Statistics
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Treatment Status</h6>
+                        <canvas id="statusChart" width="200" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Popular Procedures</h6>
+                        <canvas id="proceduresChart" width="200" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h4 class="text-primary">{{ treatments|selectattr("status", "equalto", "Completed")|list|length }}</h4>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-warning">{{ treatments|selectattr("status", "equalto", "In Progress")|list|length }}</h4>
+                        <small class="text-muted">In Progress</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-secondary">{{ treatments|selectattr("status", "equalto", "Planned")|list|length }}</h4>
+                        <small class="text-muted">Planned</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-success">₱{{ "{:,.2f}".format(treatments|sum(attribute="cost")) }}</h4>
+                        <small class="text-muted">Total Value</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function updateTreatmentStatus(treatmentId, status) {
+    if (confirm(`Are you sure you want to mark this treatment as ${status}?`)) {
+        // In a real application, this would make an AJAX call to update the status
+        alert(`Treatment marked as ${status}!`);
+        location.reload();
+    }
+}
+
+// Initialize charts when statistics modal is shown
+document.getElementById('statsModal').addEventListener('shown.bs.modal', function() {
+    // Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'In Progress', 'Planned'],
+            datasets: [{
+                data: [
+                    {{ treatments|selectattr("status", "equalto", "Completed")|list|length }},
+                    {{ treatments|selectattr("status", "equalto", "In Progress")|list|length }},
+                    {{ treatments|selectattr("status", "equalto", "Planned")|list|length }}
+                ],
+                backgroundColor: ['#28a745', '#ffc107', '#6c757d']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    
+    // Procedures Chart - simplified for demo
+    const proceduresCtx = document.getElementById('proceduresChart').getContext('2d');
+    new Chart(proceduresCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Cleaning', 'Filling', 'Root Canal', 'Extraction', 'Other'],
+            datasets: [{
+                label: 'Count',
+                data: [15, 12, 8, 5, 10], // Simplified demo data
+                backgroundColor: '#007bff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

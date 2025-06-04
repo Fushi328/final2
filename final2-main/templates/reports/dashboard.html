@@ -1,0 +1,608 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics - Dental Practice Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Reports & Analytics Dashboard
+                </h1>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#dateRangeModal">
+                        <i class="fas fa-calendar me-2"></i>
+                        Date Range
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="exportReport()">
+                        <i class="fas fa-download me-2"></i>
+                        Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Total Patients</h5>
+                            <h3>{{ stats.total_patients }}</h3>
+                            <small>+12% from last month</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Monthly Revenue</h5>
+                            <h3>₱{{ "{:,.2f}".format(stats.total_revenue_month) }}</h3>
+                            <small>+8% from last month</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">This Week</h5>
+                            <h3>{{ stats.this_week_appointments }}</h3>
+                            <small>Appointments scheduled</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-week fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Outstanding</h5>
+                            <h3>{{ stats.pending_bills }}</h3>
+                            <small>Bills pending payment</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-invoice fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-area me-2"></i>
+                        Revenue Trend (Last 12 Months)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Treatment Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="treatmentChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Daily Appointments
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="appointmentsChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-doughnut me-2"></i>
+                        Patient Demographics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="demographicsChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Appointments & Recent Activity -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Upcoming Appointments (Next 7 Days)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Patient</th>
+                                        <th>Type</th>
+                                        <th>Doctor</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in upcoming_appointments %}
+                                    <tr>
+                                        <td>{{ appointment.appointment_date.strftime('%m/%d') }}</td>
+                                        <td>{{ appointment.appointment_time.strftime('%I:%M %p') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('patients_view', id=appointment.patient.id) }}" class="text-decoration-none">
+                                                {{ appointment.patient.get_full_name() }}
+                                            </a>
+                                        </td>
+                                        <td>{{ appointment.appointment_type }}</td>
+                                        <td>Dr. {{ appointment.staff.get_full_name() }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if appointment.status == 'Scheduled' %}primary{% elif appointment.status == 'Completed' %}success{% else %}secondary{% endif %}">
+                                                {{ appointment.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">No upcoming appointments in the next 7 days</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Alerts & Notifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <strong>{{ stats.low_stock_items }}</strong> inventory items are running low
+                        <a href="{{ url_for('inventory_index') }}" class="alert-link">View Details</a>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <strong>{{ stats.pending_bills }}</strong> bills are pending payment
+                        <a href="{{ url_for('billing_index', status='Pending') }}" class="alert-link">Review Bills</a>
+                    </div>
+                    
+                    <div class="alert alert-success" role="alert">
+                        <strong>{{ stats.todays_appointments }}</strong> appointments scheduled for today
+                        <a href="{{ url_for('appointments_index') }}" class="alert-link">View Schedule</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Metrics -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Performance Metrics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h4 class="text-success">85%</h4>
+                            <small class="text-muted">Appointment Show Rate</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="text-info">4.2</h4>
+                            <small class="text-muted">Avg. Treatments/Day</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-primary">92%</h4>
+                            <small class="text-muted">Patient Satisfaction</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-warning">7.5</h4>
+                            <small class="text-muted">Avg. Wait Time (min)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Tables -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-star me-2"></i>
+                        Top Performing Treatments
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Treatment</th>
+                                    <th class="text-center">Count</th>
+                                    <th class="text-end">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Dental Cleaning</td>
+                                    <td class="text-center">45</td>
+                                    <td class="text-end">₱112,500</td>
+                                </tr>
+                                <tr>
+                                    <td>Dental Filling</td>
+                                    <td class="text-center">32</td>
+                                    <td class="text-end">₱112,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Root Canal</td>
+                                    <td class="text-center">12</td>
+                                    <td class="text-end">₱180,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Tooth Extraction</td>
+                                    <td class="text-center">18</td>
+                                    <td class="text-end">₱90,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Crown Placement</td>
+                                    <td class="text-center">8</td>
+                                    <td class="text-end">₱160,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-friends me-2"></i>
+                        Staff Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Staff Member</th>
+                                    <th class="text-center">Appointments</th>
+                                    <th class="text-center">Treatments</th>
+                                    <th class="text-end">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Dr. Admin User</td>
+                                    <td class="text-center">68</td>
+                                    <td class="text-center">52</td>
+                                    <td class="text-end">₱420,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Dr. Sarah Johnson</td>
+                                    <td class="text-center">42</td>
+                                    <td class="text-center">38</td>
+                                    <td class="text-end">₱285,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Dr. Michael Chen</td>
+                                    <td class="text-center">35</td>
+                                    <td class="text-center">29</td>
+                                    <td class="text-end">₱195,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Range Modal -->
+<div class="modal fade" id="dateRangeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar me-2"></i>
+                    Select Date Range
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dateRangeForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="text" class="form-control datepicker" id="startDate" placeholder="Start date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="text" class="form-control datepicker" id="endDate" placeholder="End date" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Quick Select</label>
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="setDateRange('today')">Today</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="setDateRange('week')">This Week</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="setDateRange('month')">This Month</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="setDateRange('year')">This Year</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="applyDateRange()">
+                    <i class="fas fa-filter me-2"></i>
+                    Apply Filter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+});
+
+function initializeCharts() {
+    // Revenue Trend Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'Revenue',
+                data: [65000, 59000, 80000, 81000, 56000, 85000, 90000, 75000, 88000, 95000, 70000, 85000],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₱' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Treatment Distribution Chart
+    const treatmentCtx = document.getElementById('treatmentChart').getContext('2d');
+    new Chart(treatmentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Cleaning', 'Filling', 'Root Canal', 'Extraction', 'Crown', 'Other'],
+            datasets: [{
+                data: [45, 32, 12, 18, 8, 15],
+                backgroundColor: [
+                    '#007bff',
+                    '#28a745',
+                    '#ffc107',
+                    '#dc3545',
+                    '#6f42c1',
+                    '#20c997'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Daily Appointments Chart
+    const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+    new Chart(appointmentsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Appointments',
+                data: [12, 19, 15, 17, 20, 8, 3],
+                backgroundColor: '#007bff',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Demographics Chart
+    const demographicsCtx = document.getElementById('demographicsChart').getContext('2d');
+    new Chart(demographicsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['18-30', '31-45', '46-60', '60+'],
+            datasets: [{
+                data: [25, 35, 30, 10],
+                backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function setDateRange(period) {
+    const now = new Date();
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    
+    endDate.value = now.toISOString().split('T')[0];
+    
+    switch(period) {
+        case 'today':
+            startDate.value = now.toISOString().split('T')[0];
+            break;
+        case 'week':
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
+            startDate.value = weekStart.toISOString().split('T')[0];
+            break;
+        case 'month':
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            startDate.value = monthStart.toISOString().split('T')[0];
+            break;
+        case 'year':
+            const yearStart = new Date(now.getFullYear(), 0, 1);
+            startDate.value = yearStart.toISOString().split('T')[0];
+            break;
+    }
+}
+
+function applyDateRange() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates.');
+        return;
+    }
+    
+    if (new Date(startDate) > new Date(endDate)) {
+        alert('Start date cannot be after end date.');
+        return;
+    }
+    
+    // In a real application, this would reload the dashboard with filtered data
+    alert(`Filtering data from ${startDate} to ${endDate}`);
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('dateRangeModal'));
+    modal.hide();
+    
+    // Refresh charts with new data
+    location.reload();
+}
+
+function exportReport() {
+    // In a real application, this would generate and download a report
+    alert('Report export feature would generate PDF/Excel files with current data');
+}
+
+// Set default date range to current month
+document.addEventListener('DOMContentLoaded', function() {
+    setDateRange('month');
+});
+</script>
+{% endblock %}

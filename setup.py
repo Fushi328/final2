@@ -6,7 +6,7 @@ This script initializes the database and creates sample data
 
 import os
 import sys
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, time
 from decimal import Decimal
 
 # Add the current directory to Python path
@@ -61,19 +61,18 @@ def create_sample_data():
     db.session.flush()  # Get patient IDs
     
     # Create today's appointments for real-time demo
-    from datetime import time
     appointment_times = [
-        time(9, 0), time(10, 30), time(11, 0), time(14, 0), 
-        time(15, 30), time(16, 0)
+        "09:00", "10:30", "11:00", "14:00",
+        "15:30", "16:00"
     ]
     
-    for i, apt_time in enumerate(appointment_times):
+    for i, apt_time_str in enumerate(appointment_times):
         if i < len(patients):
             appointment = Appointment(
                 patient_id=patients[i].id,
                 staff_id=admin.id,
                 appointment_date=date.today(),
-                appointment_time=apt_time,
+                appointment_time=datetime.strptime(apt_time_str, '%H:%M').time(),
                 duration=30,
                 appointment_type='Checkup',
                 status='Scheduled'
@@ -237,7 +236,7 @@ def create_sample_data():
                 'patient_id': patients[0].id,
                 'staff_id': admin_user.id,
                 'appointment_date': date.today() + timedelta(days=1),
-                'appointment_time': '09:00',
+                'appointment_time': datetime.strptime('09:00', '%H:%M').time(),
                 'duration': 60,
                 'appointment_type': 'Check-up',
                 'notes': 'Regular dental checkup'
@@ -246,7 +245,7 @@ def create_sample_data():
                 'patient_id': patients[1].id,
                 'staff_id': admin_user.id,
                 'appointment_date': date.today() + timedelta(days=2),
-                'appointment_time': '10:30',
+                'appointment_time': datetime.strptime('10:30', '%H:%M').time(),
                 'duration': 30,
                 'appointment_type': 'Cleaning',
                 'notes': 'Teeth cleaning session'
@@ -255,7 +254,7 @@ def create_sample_data():
                 'patient_id': patients[2].id,
                 'staff_id': admin_user.id,
                 'appointment_date': date.today() + timedelta(days=3),
-                'appointment_time': '14:00',
+                'appointment_time': datetime.strptime('14:00', '%H:%M').time(),
                 'duration': 90,
                 'appointment_type': 'Root Canal',
                 'notes': 'Root canal treatment for tooth #18'

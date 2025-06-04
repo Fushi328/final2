@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Bill - Dental Practice Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="fas fa-file-invoice-dollar me-2"></i>
+                    Create New Bill
+                </h1>
+                <a href="{{ url_for('billing_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Billing
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" id="billForm">
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Patient and Bill Information -->
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            Patient & Bill Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.patient_id.label(class="form-label") }}
+                            {{ form.patient_id(class="form-select" + (" is-invalid" if form.patient_id.errors else "")) }}
+                            {% if form.patient_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.patient_id.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.due_date.label(class="form-label") }}
+                            {{ form.due_date(class="form-control" + (" is-invalid" if form.due_date.errors else "")) }}
+                            {% if form.due_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.due_date.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.payment_method.label(class="form-label") }}
+                            {{ form.payment_method(class="form-select") }}
+                            <div class="form-text">Optional: Expected payment method</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="3", placeholder="Additional notes or payment terms...") }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bill Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calculator me-2"></i>
+                            Bill Summary
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">₱0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total:</strong>
+                            <strong id="total">₱0.00</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bill Items -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Bill Items
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="addBillItem()">
+                            <i class="fas fa-plus me-1"></i>
+                            Add Item
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="billItems">
+                            <!-- Bill items will be added here dynamically -->
+                        </div>
+                        
+                        <div class="text-center mt-3" id="emptyItemsMessage">
+                            <p class="text-muted">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Click "Add Item" to start building your bill
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Add Templates -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            Quick Add Templates
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Dental Cleaning', 1, 2500)">
+                                    <i class="fas fa-tooth me-1"></i>
+                                    Cleaning - ₱2,500
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Dental Filling', 1, 3500)">
+                                    <i class="fas fa-tooth me-1"></i>
+                                    Filling - ₱3,500
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Root Canal Treatment', 1, 15000)">
+                                    <i class="fas fa-tooth me-1"></i>
+                                    Root Canal - ₱15,000
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Tooth Extraction', 1, 5000)">
+                                    <i class="fas fa-tooth me-1"></i>
+                                    Extraction - ₱5,000
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('Consultation Fee', 1, 1000)">
+                                    <i class="fas fa-stethoscope me-1"></i>
+                                    Consultation - ₱1,000
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" 
+                                        onclick="addQuickItem('X-Ray', 1, 800)">
+                                    <i class="fas fa-x-ray me-1"></i>
+                                    X-Ray - ₱800
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Buttons -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ url_for('billing_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                        <i class="fas fa-save me-2"></i>
+                        Create Bill
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hidden field for item count -->
+        <input type="hidden" id="item_count" name="item_count" value="0">
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let itemCount = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default due date (30 days from today)
+    const dueDateInput = document.getElementById('due_date');
+    if (dueDateInput && !dueDateInput.value) {
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 30);
+        dueDateInput.value = futureDate.toISOString().split('T')[0];
+    }
+    
+    // Add initial item
+    addBillItem();
+});
+
+function addBillItem() {
+    const billItems = document.getElementById('billItems');
+    const emptyMessage = document.getElementById('emptyItemsMessage');
+    
+    if (emptyMessage) {
+        emptyMessage.style.display = 'none';
+    }
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'row mb-3 bill-item';
+    itemDiv.innerHTML = `
+        <div class="col-md-4">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control" name="items[${itemCount}][description]" 
+                   placeholder="Service or item description" required>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Quantity</label>
+            <input type="number" class="form-control quantity-input" name="items[${itemCount}][quantity]" 
+                   min="1" value="1" required>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Unit Price</label>
+            <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input type="number" class="form-control unit-price-input" name="items[${itemCount}][unit_price]" 
+                       min="0" step="0.01" required>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Total</label>
+            <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input type="text" class="form-control item-total" readonly>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-grid">
+                <button type="button" class="btn btn-outline-danger" onclick="removeBillItem(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    billItems.appendChild(itemDiv);
+    
+    // Add event listeners for calculation
+    const quantityInput = itemDiv.querySelector('.quantity-input');
+    const unitPriceInput = itemDiv.querySelector('.unit-price-input');
+    
+    quantityInput.addEventListener('input', calculateItemTotal);
+    unitPriceInput.addEventListener('input', calculateItemTotal);
+    
+    itemCount++;
+    document.getElementById('item_count').value = itemCount;
+    
+    updateSubmitButton();
+}
+
+function addQuickItem(description, quantity, unitPrice) {
+    addBillItem();
+    
+    const lastItem = document.querySelector('.bill-item:last-child');
+    lastItem.querySelector('input[name$="[description]"]').value = description;
+    lastItem.querySelector('input[name$="[quantity]"]').value = quantity;
+    lastItem.querySelector('input[name$="[unit_price]"]').value = unitPrice;
+    
+    calculateItemTotal();
+}
+
+function removeBillItem(button) {
+    const itemDiv = button.closest('.bill-item');
+    itemDiv.remove();
+    
+    calculateGrandTotal();
+    updateSubmitButton();
+    
+    // Show empty message if no items
+    const remainingItems = document.querySelectorAll('.bill-item');
+    if (remainingItems.length === 0) {
+        document.getElementById('emptyItemsMessage').style.display = 'block';
+    }
+}
+
+function calculateItemTotal() {
+    const item = event.target.closest('.bill-item');
+    const quantity = parseFloat(item.querySelector('.quantity-input').value) || 0;
+    const unitPrice = parseFloat(item.querySelector('.unit-price-input').value) || 0;
+    const total = quantity * unitPrice;
+    
+    item.querySelector('.item-total').value = total.toFixed(2);
+    
+    calculateGrandTotal();
+}
+
+function calculateGrandTotal() {
+    let total = 0;
+    document.querySelectorAll('.item-total').forEach(input => {
+        total += parseFloat(input.value) || 0;
+    });
+    
+    document.getElementById('subtotal').textContent = '₱' + total.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('total').textContent = '₱' + total.toLocaleString('en-US', {minimumFractionDigits: 2});
+}
+
+function updateSubmitButton() {
+    const items = document.querySelectorAll('.bill-item');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    let hasValidItems = false;
+    items.forEach(item => {
+        const description = item.querySelector('input[name$="[description]"]').value.trim();
+        const quantity = parseFloat(item.querySelector('input[name$="[quantity]"]').value) || 0;
+        const unitPrice = parseFloat(item.querySelector('input[name$="[unit_price]"]').value) || 0;
+        
+        if (description && quantity > 0 && unitPrice > 0) {
+            hasValidItems = true;
+        }
+    });
+    
+    submitBtn.disabled = !hasValidItems;
+}
+
+// Form validation
+document.getElementById('billForm').addEventListener('submit', function(e) {
+    const items = document.querySelectorAll('.bill-item');
+    
+    if (items.length === 0) {
+        e.preventDefault();
+        alert('Please add at least one bill item.');
+        return false;
+    }
+    
+    let hasValidItems = false;
+    items.forEach(item => {
+        const description = item.querySelector('input[name$="[description]"]').value.trim();
+        const quantity = parseFloat(item.querySelector('input[name$="[quantity]"]').value) || 0;
+        const unitPrice = parseFloat(item.querySelector('input[name$="[unit_price]"]').value) || 0;
+        
+        if (description && quantity > 0 && unitPrice > 0) {
+            hasValidItems = true;
+        }
+    });
+    
+    if (!hasValidItems) {
+        e.preventDefault();
+        alert('Please ensure all bill items have valid description, quantity, and unit price.');
+        return false;
+    }
+});
+
+// Monitor form changes
+document.addEventListener('input', function(e) {
+    if (e.target.closest('.bill-item')) {
+        updateSubmitButton();
+    }
+});
+</script>
+{% endblock %}

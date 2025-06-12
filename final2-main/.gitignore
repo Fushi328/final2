@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+build/
+develop-eggs/
+dist/
+eggs/
+.eggs/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+.hypothesis/
+
+# Editor directories and files
+.idea/
+*.iws
+*.bak
+*.swp
+*~
+.vscode/
+
+# IDE specific files
+.project
+.pydevproject
+.settings/
+
+# OS-specific files
+.DS_Store
+.Trashes
+Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+instance/*.db 
